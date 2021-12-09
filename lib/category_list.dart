@@ -15,15 +15,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'category_add.dart';
 import 'helper/categories_data.dart';
+import 'helper/project_data.dart';
 import 'register.dart';
 import 'package:http/http.dart' as http;
 
+import 'task_list.dart';
 import 'util/states.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_treeview/flutter_treeview.dart';
 
 class CategoryListScreen extends StatelessWidget {
-  const CategoryListScreen({Key? key}) : super(key: key);
+  final ProjectData? project;
+  const CategoryListScreen({Key? key, this.project}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +43,10 @@ class CategoryListScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         //title: Text('Login'),
       ),
-      body: MyHomePage(title: 'TreeViewExample'),
+      body: MyHomePage(
+        title: 'TreeViewExample',
+        project: project,
+      ),
     );
   }
 }
@@ -156,8 +162,9 @@ class CategoryListState extends State<CategoryList> {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, this.title}) : super(key: key);
+  MyHomePage({Key? key, this.title, this.project}) : super(key: key);
   final String? title;
+  final ProjectData? project;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -284,8 +291,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     final prefs = await SharedPreferences.getInstance();
 
-    var url = 'http://www.vietinrace.com/srvTD/getCategories/' +
-        prefs.getString('email')!;
+    var url = 'http://www.vietinrace.com/srvTD/getCategoriesProject/' +
+        widget.project!.id;
+    //prefs.getString('email')!;
     final response = await http.get(Uri.parse(url));
 
     setState(() {
@@ -297,6 +305,7 @@ class _MyHomePageState extends State<MyHomePage> {
       for (var dat in data) {
         CategoriesData category = CategoriesData(
             name: dat['name'],
+            id: dat['id'],
             code: dat['code'],
             key: dat['key'],
             level: int.parse(dat['level']),
@@ -305,7 +314,8 @@ class _MyHomePageState extends State<MyHomePage> {
         categories.add(category);
       }
 
-      List<Node> _nodeTrees = _setNodesTree(2, categories);
+      List<Node> _nodeTrees = _setNodesTree(widget.project!.level, categories);
+
       for (int i = 0; i < _nodeTrees.length; i++) {
         _nodes.add(_nodeTrees[i]);
       }
@@ -544,11 +554,28 @@ class _MyHomePageState extends State<MyHomePage> {
                         _expandNode(key, expanded),
                     onNodeTap: (key) {
                       debugPrint('Selected: $key');
+                      CategoryData category = CategoryData();
+                      for (int i = 0; i < categories.length; i++) {
+                        if (categories[i].key == key) {
+                          category.code = categories[i].code;
+                          category.name = categories[i].name;
+                          category.id = categories[i].id;
+                          category.key = categories[i].key;
+                        }
+                      }
+
                       setState(() {
                         _selectedNode = key;
                         _treeViewController =
                             _treeViewController.copyWith(selectedKey: key);
                       });
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskListScreen(
+                              project: widget.project, category: category),
+                        ),
+                      );
                     },
                     theme: _treeViewTheme,
                   ),

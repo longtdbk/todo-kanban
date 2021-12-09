@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/services.dart';
+import 'package:kanban_dashboard/category_list.dart';
 import 'package:kanban_dashboard/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -89,6 +90,8 @@ class ProjectListState extends State<ProjectList> {
       for (var dat in data) {
         ProjectData project = ProjectData();
         project.name = dat['name'];
+        project.id = dat['id'];
+        project.level = int.parse(dat['level']);
         project.code = dat['code'];
         projects.add(project);
       }
@@ -133,12 +136,13 @@ class ProjectListState extends State<ProjectList> {
                     title: Text(
                       projects[index].name,
                     ),
-                    subtitle: Text('Dự án'),
+                    subtitle: const Text('Dự án'),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ProjectScreen(),
+                          builder: (context) =>
+                              CategoryListScreen(project: projects[index]),
                         ),
                       );
                     }),

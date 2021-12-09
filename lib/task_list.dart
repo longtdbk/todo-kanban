@@ -14,6 +14,7 @@ import 'package:kanban_dashboard/category_list.dart';
 import 'package:kanban_dashboard/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'helper/categories_data.dart';
 import 'helper/project_data.dart';
 import 'helper/task_data.dart';
 import 'helper/task_status_data.dart';
@@ -22,8 +23,14 @@ import 'project_add.dart';
 import 'register.dart';
 import 'package:http/http.dart' as http;
 
+import 'task_add.dart';
+
 class TaskListScreen extends StatelessWidget {
-  const TaskListScreen({Key? key}) : super(key: key);
+  final ProjectData? project;
+  final CategoryData? category;
+
+  const TaskListScreen({Key? key, this.project, this.category})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -40,13 +47,15 @@ class TaskListScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         //title: Text('Login'),
       ),
-      body: const TaskList(),
+      body: TaskList(project: project, category: category),
     );
   }
 }
 
 class TaskList extends StatefulWidget {
-  const TaskList({Key? key}) : super(key: key);
+  final ProjectData? project;
+  final CategoryData? category;
+  const TaskList({Key? key, this.project, this.category}) : super(key: key);
 
   @override
   TaskListState createState() => TaskListState();
@@ -58,12 +67,14 @@ class TaskListState extends State<TaskList> {
   var tasks = [];
   var taskStatuses = [];
   bool isLoading = false;
-
+  // String project = '';
   @override
   void initState() {
     super.initState();
-    getTasksProject('61ab4b5084a5fa00241602dc');
-    getTaskStatuses('61ab4b5084a5fa00241602dc');
+    String project = widget.project!.id;
+    // String project = '61ab4b5084a5fa00241602dc';
+    getTasksProject(project);
+    getTaskStatuses(project);
   }
 
   void showInSnackBar(String value) {
@@ -108,7 +119,7 @@ class TaskListState extends State<TaskList> {
 
   // tạm đã --> để xong phần giao diện (rồi add Task ...)
   Future<void> getTaskStatuses(String project) async {
-    projects = [];
+    taskStatuses = [];
     setState(() {
       isLoading = true;
     });
@@ -127,7 +138,7 @@ class TaskListState extends State<TaskList> {
       for (var dat in data) {
         TaskStatusData taskStatus = TaskStatusData(
             name: dat['name'],
-            id: '1',
+            id: dat['id'],
             code: dat['code'],
             shortName: dat['code']);
         taskStatuses.add(taskStatus);
@@ -224,6 +235,7 @@ class TaskListState extends State<TaskList> {
             SizedBox(height: 10),
             FloatingActionButton(
               onPressed: () {
+                showBottomModalAdd(taskStatuses[i].id);
                 // _routeToAddCategory();
                 //createModal();
               },
@@ -283,6 +295,19 @@ class TaskListState extends State<TaskList> {
     }
   }
 
+  void showBottomModalAdd(String id) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return TaskAdd(
+            taskStatusId: id,
+            category: widget.category,
+            project: widget.project!);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     //const sizedBoxSpace = SizedBox(height: 24);
@@ -337,3 +362,15 @@ class TaskListState extends State<TaskList> {
         backgroundColor: Colors.red);
   }
 }
+
+
+
+// Copyright 2019 The Flutter team. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+
+
+
+
+

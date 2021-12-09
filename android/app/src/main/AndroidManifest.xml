@@ -2,7 +2,9 @@
     package="com.example.kanban_dashboard">
    <application
         android:label="kanban_dashboard"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/todo_kanban"
+        android:usesCleartextTraffic="true"
+        >
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

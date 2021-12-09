@@ -4,6 +4,7 @@ class TasksData {
   final String description;
   final int level;
   final String status;
+  final double profit;
   final String? type;
   final String? category;
 
@@ -13,6 +14,7 @@ class TasksData {
       required this.description,
       required this.level,
       required this.status,
+      this.profit = 0,
       this.type,
       this.category});
 
@@ -24,6 +26,7 @@ class TaskData {
   String code = '';
   String description = '';
   String type = '';
+  double profit = 0;
   String status = '';
   String category = '';
   //CategoriesData();
