@@ -14,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helper/categories_data.dart';
 import 'category_list.dart';
-import 'register.dart';
 import 'package:http/http.dart' as http;
 // import 'package:http_parser/http_parser.dart' as http;
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:carousel_slider/carousel_slider.dart';
@@ -65,16 +66,22 @@ class TaskListState extends State<TaskList> {
   // with SingleTickerProviderStateMixin, RestorationMixin {
   var projects = [];
   var tasks = [];
+  //var tasksMap = [];
+  HashMap tasksMap = HashMap<String, List<TaskData>>();
   var taskStatuses = [];
   bool isLoading = false;
+  String project = '';
+  String category = '';
   // String project = '';
   @override
   void initState() {
     super.initState();
-    String project = widget.project!.id;
+    project = widget.project!.id;
+    category = widget.category!.id;
     // String project = '61ab4b5084a5fa00241602dc';
-    getTasksProject(project);
-    getTaskStatuses(project);
+
+    getTaskStatuses(project, category);
+    //getTasksProject(project);
   }
 
   void showInSnackBar(String value) {
@@ -85,7 +92,7 @@ class TaskListState extends State<TaskList> {
   }
 
   // sau phải theo user nữa chứ ko phải chỉ thế này đâu ??
-  Future<void> getTasksProject(String project) async {
+  Future<void> getTasksProject(String project, String category) async {
     tasks = [];
     setState(() {
       isLoading = true;
@@ -93,7 +100,12 @@ class TaskListState extends State<TaskList> {
 
     final prefs = await SharedPreferences.getInstance();
 
-    var url = 'http://www.vietinrace.com/srvTD/getTasksProject/' + project;
+    //var url = 'http://www.vietinrace.com/srvTD/getTasksProject/' + project;
+
+    var url = 'http://www.vietinrace.com/srvTD/getTasksProjectCategory/' +
+        project +
+        '/' +
+        category;
     final response = await http.get(Uri.parse(url));
 
     setState(() {
@@ -112,13 +124,18 @@ class TaskListState extends State<TaskList> {
         task.category = dat['category'];
         tasks.add(task);
       }
+      for (int i = 0; i < tasks.length; i++) {
+        tasksMap[tasks[i].status].add(tasks[i]);
+      }
+
+      createTabItem();
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
   }
 
   // tạm đã --> để xong phần giao diện (rồi add Task ...)
-  Future<void> getTaskStatuses(String project) async {
+  Future<void> getTaskStatuses(String project, String category) async {
     taskStatuses = [];
     setState(() {
       isLoading = true;
@@ -143,7 +160,12 @@ class TaskListState extends State<TaskList> {
             shortName: dat['code']);
         taskStatuses.add(taskStatus);
       }
-      createTabItem();
+
+      for (int i = 0; i < taskStatuses.length; i++) {
+        List<TaskData> taskList = [];
+        tasksMap[taskStatuses[i].id] = taskList;
+      }
+      getTasksProject(project, category);
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
@@ -216,18 +238,24 @@ class TaskListState extends State<TaskList> {
               child: ListView(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   children: [
-                    for (int index = 0; index < 10; index++)
-                      //ProjectData project = (ProjectData)projects[i];
-                      //if (tasks[index].status == taskStatuses[i].code){
+                    // for (int index = 0; index < taskStatuses.length; index++)
+                    //ProjectData project = (ProjectData)projects[i];
+                    //if (tasks[index].status == taskStatuses[i].code){
+                    for (int j = 0;
+                        j < tasksMap[taskStatuses[i].id].length;
+                        j++)
+                      //if (tasks[j].status == taskStatuses[i].id ){
                       ListTile(
                         leading: ExcludeSemantics(
-                          child: CircleAvatar(child: Text('${index + 1}')),
+                          child: CircleAvatar(child: Text('${j + 1}')),
                         ),
                         title: Text(
-                          'Thử nghiệm',
+                          tasksMap[taskStatuses[i].id][j].name,
                         ),
-                        subtitle: Text('Thử nghiệm'),
+                        subtitle:
+                            Text(tasksMap[taskStatuses[i].id][j].description),
                       ),
+                    // }
                   ]),
             ),
             // )),
@@ -248,52 +276,52 @@ class TaskListState extends State<TaskList> {
     }
   }
 
-  void createTabItem2() {
-    for (int i = 0; i < taskStatuses.length; i++) {
-      Widget w = Container(
-        child: Container(
-          margin: EdgeInsets.all(5.0),
-          child: ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(5.0)),
-              // ô, hay thật, cái này là hiển thị phía trên :)
-              child: Stack(
-                children: <Widget>[
-                  Image.network(imgList[i],
-                      fit: BoxFit.cover, width: 1000.0, height: 600),
-                  Positioned(
-                    bottom: 0.0,
-                    left: 0.0,
-                    right: 0.0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color.fromARGB(200, 0, 0, 0),
-                            Color.fromARGB(0, 0, 0, 0)
-                          ],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                        ),
-                      ),
-                      padding: EdgeInsets.symmetric(
-                          vertical: 10.0, horizontal: 20.0),
-                      child: Text(
-                        'No. ${taskStatuses[i].name} image',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              )),
-        ),
-      );
-      imageSliders.add(w);
-    }
-  }
+  // void createTabItem2() {
+  //   for (int i = 0; i < taskStatuses.length; i++) {
+  //     Widget w = Container(
+  //       child: Container(
+  //         margin: EdgeInsets.all(5.0),
+  //         child: ClipRRect(
+  //             borderRadius: BorderRadius.all(Radius.circular(5.0)),
+  //             // ô, hay thật, cái này là hiển thị phía trên :)
+  //             child: Stack(
+  //               children: <Widget>[
+  //                 Image.network(imgList[i],
+  //                     fit: BoxFit.cover, width: 1000.0, height: 600),
+  //                 Positioned(
+  //                   bottom: 0.0,
+  //                   left: 0.0,
+  //                   right: 0.0,
+  //                   child: Container(
+  //                     decoration: BoxDecoration(
+  //                       gradient: LinearGradient(
+  //                         colors: [
+  //                           Color.fromARGB(200, 0, 0, 0),
+  //                           Color.fromARGB(0, 0, 0, 0)
+  //                         ],
+  //                         begin: Alignment.bottomCenter,
+  //                         end: Alignment.topCenter,
+  //                       ),
+  //                     ),
+  //                     padding: EdgeInsets.symmetric(
+  //                         vertical: 10.0, horizontal: 20.0),
+  //                     child: Text(
+  //                       'No. ${taskStatuses[i].name} image',
+  //                       style: TextStyle(
+  //                         color: Colors.white,
+  //                         fontSize: 20.0,
+  //                         fontWeight: FontWeight.bold,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ],
+  //             )),
+  //       ),
+  //     );
+  //     imageSliders.add(w);
+  //   }
+  // }
 
   void showBottomModalAdd(String id) {
     showModalBottomSheet<void>(
@@ -318,59 +346,52 @@ class TaskListState extends State<TaskList> {
     return RefreshIndicator(
         onRefresh: () async {
           //Do whatever you want on refrsh.Usually update the date of the listview
-          getTaskStatuses('61ab4b5084a5fa00241602dc');
+          //getTaskStatuses('61ab4b5084a5fa00241602dc');
+          getTasksProject(project, category);
         },
-        child: Column(children: [
-          Padding(
-              padding: EdgeInsets.only(top: 600 * .025), // để lên top
-              child: CarouselSlider(
-                items: imageSliders,
-                carouselController: _controller,
-                options: CarouselOptions(
-                    autoPlay: false,
-                    enlargeCenterPage: true,
-                    height: MediaQuery.of(context).size.height * 0.8,
-                    // aspectRatio: 2.0,
-                    enableInfiniteScroll: false, // muốn sang trái sang phải ok
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        _current = index;
-                      });
-                    }),
-              )),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: taskStatuses.asMap().entries.map((entry) {
-              return GestureDetector(
-                //onTap: () => _controller.animateToPage(entry.key),
-                child: Container(
-                  width: 6.0,
-                  height: 6.0,
-                  margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: (Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black)
-                          .withOpacity(_current == entry.key ? 0.9 : 0.4)),
-                ),
-              );
-            }).toList(),
-          ),
-        ]),
+        child: Scrollbar(
+          child: Column(children: [
+            Padding(
+                padding: const EdgeInsets.only(top: 600 * .025), // để lên top
+                child: CarouselSlider(
+                  items: imageSliders,
+                  carouselController: _controller,
+                  options: CarouselOptions(
+                      autoPlay: false,
+                      enlargeCenterPage: true,
+                      height: MediaQuery.of(context).size.height * 0.8,
+                      // aspectRatio: 2.0,
+                      enableInfiniteScroll:
+                          false, // muốn sang trái sang phải ok
+                      onPageChanged: (index, reason) {
+                        setState(() {
+                          _current = index;
+                        });
+                      }),
+                )),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: taskStatuses.asMap().entries.map((entry) {
+                return GestureDetector(
+                  //onTap: () => _controller.animateToPage(entry.key),
+                  child: Container(
+                    width: 6.0,
+                    height: 6.0,
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 8.0, horizontal: 4.0),
+                    decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: (Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : Colors.black)
+                            .withOpacity(_current == entry.key ? 0.9 : 0.4)),
+                  ),
+                );
+              }).toList(),
+            ),
+          ]),
+        ),
         color: Colors.white,
         backgroundColor: Colors.red);
   }
 }
-
-
-
-// Copyright 2019 The Flutter team. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-
-
-
-
-

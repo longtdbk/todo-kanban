@@ -207,71 +207,10 @@ class _MyHomePageState extends State<MyHomePage> {
   ExpanderModifier _expanderModifier = ExpanderModifier.none;
   bool _allowParentSelect = false;
   bool _supportParentDoubleTap = false;
+  int projectLevel = 0;
 
   @override
   void initState() {
-//     _nodes = [
-//       Node(
-//         label: 'documents',
-//         key: 'docs',
-//         expanded: docsOpen,
-//         icon: docsOpen ? Icons.folder_open : Icons.folder,
-//         children: [
-//           Node(
-//             label: 'personal',
-//             key: 'd3',
-//             icon: Icons.input,
-//             iconColor: Colors.red,
-//             children: [
-//               Node(
-//                 label: 'Poems.docx',
-//                 key: 'pd1',
-//                 icon: Icons.insert_drive_file,
-//               ),
-//               Node(
-//                 label: 'Job Hunt',
-//                 key: 'jh1',
-//                 icon: Icons.input,
-//                 children: [
-//                   Node(
-//                     label: 'Resume.docx',
-//                     key: 'jh1a',
-//                     icon: Icons.insert_drive_file,
-//                   ),
-//                   Node(
-//                     label: 'Cover Letter.docx',
-//                     key: 'jh1b',
-//                     icon: Icons.insert_drive_file,
-//                   ),
-//                 ],
-//               ),
-//             ],
-//           ),
-//           Node(
-//             label: 'Inspection.docx',
-//             key: 'd1',
-// //          icon: Icons.insert_drive_file),
-//           ),
-//           Node(label: 'Invoice.docx', key: 'd2', icon: Icons.insert_drive_file),
-//         ],
-//       ),
-//       Node(
-//           label: 'MeetingReport.xls',
-//           key: 'mrxls',
-//           icon: Icons.insert_drive_file),
-//       Node(
-//           label: 'MeetingReport.pdf',
-//           key: 'mrpdf',
-//           iconColor: Colors.green.shade300,
-//           selectedIconColor: Colors.white,
-//           icon: Icons.insert_drive_file),
-//       Node(label: 'Demo.zip', key: 'demo', icon: Icons.archive),
-//       Node(
-//         label: 'empty folder',
-//         key: 'empty',
-//         parent: true,
-//       ),
-//     ];
     getAllCategorys();
     super.initState();
   }
@@ -554,6 +493,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         _expandNode(key, expanded),
                     onNodeTap: (key) {
                       debugPrint('Selected: $key');
+
+                      setState(() {
+                        _selectedNode = key;
+                        _treeViewController =
+                            _treeViewController.copyWith(selectedKey: key);
+                      });
+                    },
+                    onNodeDoubleTap: (key) {
                       CategoryData category = CategoryData();
                       for (int i = 0; i < categories.length; i++) {
                         if (categories[i].key == key) {
@@ -563,12 +510,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           category.key = categories[i].key;
                         }
                       }
-
-                      setState(() {
-                        _selectedNode = key;
-                        _treeViewController =
-                            _treeViewController.copyWith(selectedKey: key);
-                      });
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -622,18 +563,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 });
               },
             ),
-//            CupertinoButton(
-//              child: Text('Toggle'),
-//              onPressed: _treeViewController.selectedNode != null &&
-//                      _treeViewController.selectedNode.isParent
-//                  ? () {
-//                      setState(() {
-//                        _treeViewController = _treeViewController
-//                            .withToggleNode(_treeViewController.selectedKey);
-//                      });
-//                    }
-//                  : null,
-//            ),
             CupertinoButton(
               child: Text('Deep'),
               onPressed: () {
@@ -654,7 +583,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             CupertinoButton(
-              child: Text('Edit'),
+              child: Text('Sửa tên'),
               onPressed: () {
                 TextEditingController editingController = TextEditingController(
                     text: _treeViewController.selectedNode!.label);
@@ -662,7 +591,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     context: context,
                     builder: (context) {
                       return CupertinoAlertDialog(
-                        title: Text('Edit Label'),
+                        title: Text('Sửa tên Danh Mục'),
                         content: Container(
                           height: 80,
                           alignment: Alignment.center,
@@ -692,7 +621,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           _node.copyWith(
                                               label: editingController.text));
                                 });
-                                debugPrint(editingController.text);
+                                //debugPrint(editingController.text);
                               }
                               Navigator.of(context).pop();
                             },

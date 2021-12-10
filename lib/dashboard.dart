@@ -32,10 +32,10 @@ class Dashboard extends StatelessWidget {
         '/dashboard': (context) => const DashboardPage(),
         '/kanban': (context) => const ChartScreen(),
         '/list_project': (context) => const ProjectListScreen(),
-        '/list_category': (context) => const CategoryListScreen(),
+        //'/list_category': (context) => const CategoryListScreen(),
         '/list_task_type': (context) => const TaskTypeListScreen(),
         '/task_status': (context) => const TaskStatusScreen(),
-        '/list_task': (context) => const TaskListScreen(),
+        //'/list_task': (context) => const TaskListScreen(),
       },
 
       //home: DashboardPage(),
