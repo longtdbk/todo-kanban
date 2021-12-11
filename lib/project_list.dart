@@ -112,6 +112,42 @@ class ProjectListState extends State<ProjectList> {
         builder: (BuildContext context) => const ProjectAddScreen()));
   }
 
+  List<Widget> buildList() {
+    List<Widget> list = [];
+    if (isLoading) {
+      list.add(const Center(child: CircularProgressIndicator()));
+    } else {
+      for (int index = 0; index < projects.length; index++) {
+        //ProjectData project = (ProjectData)projects[i];
+        ListTile item = ListTile(
+            leading: ExcludeSemantics(
+              child: CircleAvatar(child: Text('${index + 1}')),
+            ),
+            title: Text(
+              projects[index].name,
+            ),
+            subtitle: const Text('Dự án'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProjectSingle(project: projects[index]),
+                ),
+              );
+            });
+        list.add(item);
+      }
+    }
+    list.add(FloatingActionButton(
+      onPressed: () {
+        _routeToAddProject();
+      },
+      tooltip: 'Tạo dự án mới',
+      child: const Icon(Icons.add),
+    ));
+    return list;
+  }
+
   @override
   Widget build(BuildContext context) {
     //const sizedBoxSpace = SizedBox(height: 24);
@@ -126,34 +162,7 @@ class ProjectListState extends State<ProjectList> {
           child: ListView(
             restorationId: 'project_list_view',
             padding: const EdgeInsets.symmetric(vertical: 8),
-            children: [
-              for (int index = 0; index < projects.length; index++)
-                //ProjectData project = (ProjectData)projects[i];
-                ListTile(
-                    leading: ExcludeSemantics(
-                      child: CircleAvatar(child: Text('${index + 1}')),
-                    ),
-                    title: Text(
-                      projects[index].name,
-                    ),
-                    subtitle: const Text('Dự án'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              CategoryListScreen(project: projects[index]),
-                        ),
-                      );
-                    }),
-              FloatingActionButton(
-                onPressed: () {
-                  _routeToAddProject();
-                },
-                tooltip: 'Tạo dự án mới',
-                child: const Icon(Icons.add),
-              ),
-            ],
+            children: buildList(),
           ),
         ),
         color: Colors.white,

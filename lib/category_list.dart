@@ -43,134 +43,24 @@ class CategoryListScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         //title: Text('Login'),
       ),
-      body: MyHomePage(
-        title: 'TreeViewExample',
+      body: ProjectCategoryScreen(
+        //title: 'TreeViewExample',
         project: project,
       ),
     );
   }
 }
 
-class CategoryList extends StatefulWidget {
-  const CategoryList({Key? key}) : super(key: key);
-
-  @override
-  CategoryListState createState() => CategoryListState();
-}
-
-// cái này mục tiêu là hiện hay ẩn --> tạo thành 1 file mới thôi (helper)
-
-class CategoryListState extends State<CategoryList> {
-  var categories = [];
-
-  bool isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    getAllCategorys();
-  }
-
-  void showInSnackBar(String value) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(value),
-    ));
-  }
-
-  Future<void> getAllCategorys() async {
-    categories = [];
-    setState(() {
-      isLoading = true;
-    });
-
-    final prefs = await SharedPreferences.getInstance();
-
-    var url = 'http://www.vietinrace.com/srvTD/getCategories/' +
-        prefs.getString('email')!;
-    final response = await http.get(Uri.parse(url));
-
-    setState(() {
-      isLoading = false;
-    });
-    if (response.statusCode == 200) {
-      var json = jsonDecode(response.body);
-      var data = json['data'];
-      for (var dat in data) {
-        CategoryData category = CategoryData();
-        category.name = dat['name'];
-        category.code = dat['code'];
-        categories.add(category);
-      }
-      // showInSnackBar(msg);
-      // if (status == "true") {
-      //   Timer(
-      //       Duration(seconds: 2),
-      //       () => Navigator.of(context).pushReplacement(MaterialPageRoute(
-      //           builder: (BuildContext context) => DashboardPage())));
-      // }
-    } else {
-      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
-    }
-  }
-
-  void _routeToAddCategory() {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (BuildContext context) => const CategoryAddScreen()));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    //const sizedBoxSpace = SizedBox(height: 24);
-    //const sizedBoxWidth = SizedBox(width: 18);
-
-    return RefreshIndicator(
-        onRefresh: () async {
-          //Do whatever you want on refrsh.Usually update the date of the listview
-          getAllCategorys();
-        },
-        child: Scrollbar(
-          child: ListView(
-            restorationId: 'Category_list_view',
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            children: [
-              for (int index = 0; index < categories.length; index++)
-                //ProjectData project = (ProjectData)projects[i];
-
-                ListTile(
-                  leading: ExcludeSemantics(
-                    child: CircleAvatar(child: Text('$index')),
-                  ),
-                  title: Text(
-                    categories[index].name,
-                  ),
-                  subtitle: Text('Danh mục'),
-                ),
-              FloatingActionButton(
-                onPressed: () {
-                  _routeToAddCategory();
-                },
-                tooltip: 'Tạo danh mục mới',
-                child: const Icon(Icons.add),
-              ),
-            ],
-          ),
-        ),
-        color: Colors.white,
-        backgroundColor: Colors.purple);
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, this.title, this.project}) : super(key: key);
-  final String? title;
+class ProjectCategoryScreen extends StatefulWidget {
+  ProjectCategoryScreen({Key? key, this.project}) : super(key: key);
+  //final String? title;
   final ProjectData? project;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _ProjectCategoryScreenState createState() => _ProjectCategoryScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
   List<CategoriesData> categories = [];
   bool isLoading = false;
 

@@ -13,41 +13,44 @@ import 'package:kanban_dashboard/dashboard.dart';
 import 'package:kanban_dashboard/project_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'category_list.dart';
+import 'custom_field_list.dart';
 import 'helper/categories_data.dart';
 import 'helper/project_data.dart';
 import 'project_add.dart';
-import 'register.dart';
 import 'package:http/http.dart' as http;
 
-class ProjectScreen extends StatelessWidget {
-  const ProjectScreen({Key? key}) : super(key: key);
-  // {
-  //   this.code = code;
-  // };
+import 'task_status.dart';
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Dự án',
-        ),
-        leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                    builder: (BuildContext context) =>
-                        const ProjectListScreen()))),
-        automaticallyImplyLeading: false,
-        //title: Text('Login'),
-      ),
-      body: const ProjectSingle(),
-    );
-  }
-}
+// muc dich la co cai co dinh, co cai thay doi ???
+// class ProjectScreen extends StatelessWidget {
+//   final ProjectData ?projectData;
+//   const ProjectScreen({Key? key, this.projectData}) : super(key: key);
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text(
+//           'Dự án',
+//         ),
+//         leading: IconButton(
+//             icon: const Icon(Icons.arrow_back, color: Colors.black),
+//             onPressed: () => Navigator.of(context).pushReplacement(
+//                 MaterialPageRoute(
+//                     builder: (BuildContext context) =>
+//                         const ProjectListScreen()))),
+//         automaticallyImplyLeading: false,
+//         //title: Text('Login'),
+//       ),
+//       body: const ProjectSingle(projectData:projectData),
+//     );
+//   }
+// }
 
 class ProjectSingle extends StatefulWidget {
-  const ProjectSingle({Key? key}) : super(key: key);
+  final ProjectData? project;
+  const ProjectSingle({Key? key, this.project}) : super(key: key);
 
   @override
   ProjectSingleState createState() => ProjectSingleState();
@@ -59,11 +62,23 @@ class ProjectSingleState extends State<ProjectSingle> {
   var categories = [];
   bool isLoading = false;
 
+  int _selectedIndex = 0;
+  static const TextStyle optionStyle =
+      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+  List<Widget> _listBody = [];
+
+  void createTabItem() {
+    _listBody.add(ProjectCategoryScreen(project: widget.project));
+    _listBody.add(TaskStatus());
+    _listBody.add(CustomFieldList(project: widget.project));
+  }
+
   @override
   void initState() {
     super.initState();
     //getProject('cai-tien');
     getProjectSimple();
+    createTabItem();
   }
 
   void showInSnackBar(String value) {
@@ -96,13 +111,6 @@ class ProjectSingleState extends State<ProjectSingle> {
         category.code = dat['code'];
         categories.add(category);
       }
-      // showInSnackBar(msg);
-      // if (status == "true") {
-      //   Timer(
-      //       Duration(seconds: 2),
-      //       () => Navigator.of(context).pushReplacement(MaterialPageRoute(
-      //           builder: (BuildContext context) => DashboardPage())));
-      // }
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
@@ -120,50 +128,47 @@ class ProjectSingleState extends State<ProjectSingle> {
         builder: (BuildContext context) => const ProjectAddScreen()));
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     //const sizedBoxSpace = SizedBox(height: 24);
     //const sizedBoxWidth = SizedBox(width: 18);
 
-    return RefreshIndicator(
-        onRefresh: () async {
-          //Do whatever you want on refrsh.Usually update the date of the listview
-          //getProject('cai-tien');
-        },
-        child: Scrollbar(
-          child: ListView(
-            restorationId: 'project_list_view',
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            children: [
-              for (int index = 0; index < categories.length; index++)
-                //ProjectData project = (ProjectData)projects[i];
-                ListTile(
-                    leading: ExcludeSemantics(
-                      child: CircleAvatar(child: Text('$index')),
-                    ),
-                    title: Text(
-                      categories[index].name,
-                    ),
-                    subtitle: Text('Danh mục'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DashboardPage(),
-                        ),
-                      );
-                    }),
-              FloatingActionButton(
-                onPressed: () {
-                  _routeToAddProject();
-                },
-                tooltip: 'Tạo dự án mới',
-                child: const Icon(Icons.add),
-              ),
-            ],
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Dự án',
           ),
         ),
-        color: Colors.white,
-        backgroundColor: Colors.red);
+        body: Center(
+          child: _listBody.elementAt(_selectedIndex),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_tree_outlined),
+              label: 'Danh mục',
+              backgroundColor: Colors.red,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.style_sharp),
+              label: 'Trạng Thái ',
+              backgroundColor: Colors.green,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.control_point_duplicate_outlined),
+              label: 'Trường Tự chọn',
+              backgroundColor: Colors.purple,
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.amber[800],
+          onTap: _onItemTapped,
+        ));
   }
 }

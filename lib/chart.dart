@@ -27,7 +27,7 @@ class _ChartScreenState extends State {
   @override
   void initState() {
     super.initState();
-    getAllProjects('61ab4b5084a5fa00241602dc', 2);
+    getAllCategoriesProject('61ab4b5084a5fa00241602dc', 2);
   }
 
   void showInSnackBar(String value) {
@@ -37,7 +37,7 @@ class _ChartScreenState extends State {
     ));
   }
 
-  Future<void> getAllProjects(String project, int level) async {
+  Future<void> getAllCategoriesProject(String project, int level) async {
     chartDatas = [];
     setState(() {
       isLoading = true;

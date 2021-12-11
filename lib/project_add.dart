@@ -9,12 +9,10 @@ import 'package:flutter/material.dart';
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/services.dart';
-import 'package:kanban_dashboard/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helper/project_data.dart';
 import 'project_list.dart';
-import 'register.dart';
 import 'package:http/http.dart' as http;
 // import 'package:http_parser/http_parser.dart' as http;
 
@@ -143,14 +141,6 @@ class ProjectAddState extends State<ProjectAdd> with RestorationMixin {
   void _routeToProjectList() {
     Navigator.of(context).pushReplacement(MaterialPageRoute(
         builder: (BuildContext context) => const ProjectListScreen()));
-  }
-
-  String? _validatePassword(String? value) {
-    final passwordField = _passwordFieldKey.currentState;
-    if (passwordField!.value == null || passwordField.value!.isEmpty) {
-      return 'Chưa nhập Mật khẩu ';
-    }
-    return null;
   }
 
   @override

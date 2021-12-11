@@ -31,9 +31,8 @@ class CategoryAddScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () => Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
-                    builder: (BuildContext context) => const CategoryList()))),
+                    builder: (BuildContext context) => const DashboardPage()))),
         automaticallyImplyLeading: false,
-        //title: Text('Login'),
       ),
       body: const CategoryAdd(),
     );
