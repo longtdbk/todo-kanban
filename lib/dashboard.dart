@@ -110,7 +110,7 @@ class _DashboardPageState extends State<DashboardPage> {
         drawerHeader,
         ListTile(
           title: const Text(
-            'Item One',
+            'Charts',
           ),
           leading: const Icon(Icons.favorite),
           onTap: () {
@@ -129,7 +129,7 @@ class _DashboardPageState extends State<DashboardPage> {
         // ),
         ListTile(
           title: const Text(
-            'Quản lý Dự án',
+            'Quản trị Dự án',
           ),
           leading: const Icon(Icons.pan_tool),
           onTap: () {
@@ -137,46 +137,46 @@ class _DashboardPageState extends State<DashboardPage> {
             Navigator.pushNamed(context, '/list_project');
           },
         ),
-        ListTile(
-          title: const Text(
-            'Quản trị Danh Mục',
-          ),
-          leading: const Icon(Icons.pan_tool),
-          onTap: () {
-            //Navigator.pop(context);
-            Navigator.pushNamed(context, '/list_category');
-          },
-        ),
+        // ListTile(
+        //   title: const Text(
+        //     'Quản trị Danh Mục',
+        //   ),
+        //   leading: const Icon(Icons.pan_tool),
+        //   onTap: () {
+        //     //Navigator.pop(context);
+        //     Navigator.pushNamed(context, '/list_category');
+        //   },
+        // ),
         ListTile(
           title: const Text(
             'Quản trị Loại CV',
           ),
-          leading: const Icon(Icons.pan_tool),
+          leading: const Icon(Icons.air_sharp),
           onTap: () {
             //Navigator.pop(context);
             Navigator.pushNamed(context, '/list_task_type');
           },
         ),
-        ListTile(
-          title: const Text(
-            'Quản trị Trạng Thái',
-          ),
-          leading: const Icon(Icons.pan_tool),
-          onTap: () {
-            //Navigator.pop(context);
-            Navigator.pushNamed(context, '/task_status');
-          },
-        ),
-        ListTile(
-          title: const Text(
-            'Quản trị công việc',
-          ),
-          leading: const Icon(Icons.work),
-          onTap: () {
-            //Navigator.pop(context);
-            Navigator.pushNamed(context, '/list_task');
-          },
-        ),
+        // ListTile(
+        //   title: const Text(
+        //     'Quản trị Trạng Thái',
+        //   ),
+        //   leading: const Icon(Icons.pan_tool),
+        //   onTap: () {
+        //     //Navigator.pop(context);
+        //     Navigator.pushNamed(context, '/task_status');
+        //   },
+        // ),
+        // ListTile(
+        //   title: const Text(
+        //     'Quản trị công việc',
+        //   ),
+        //   leading: const Icon(Icons.work),
+        //   onTap: () {
+        //     //Navigator.pop(context);
+        //     Navigator.pushNamed(context, '/list_task');
+        //   },
+        // ),
         ListTile(
           title: const Text(
             'Thoát',

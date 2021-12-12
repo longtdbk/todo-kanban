@@ -115,7 +115,7 @@ class ProjectListState extends State<ProjectList> {
   List<Widget> buildList() {
     List<Widget> list = [];
     if (isLoading) {
-      list.add(const Center(child: CircularProgressIndicator()));
+      list.add(const Center(child: LinearProgressIndicator()));
     } else {
       for (int index = 0; index < projects.length; index++) {
         //ProjectData project = (ProjectData)projects[i];
@@ -137,14 +137,16 @@ class ProjectListState extends State<ProjectList> {
             });
         list.add(item);
       }
+
+      list.add(FloatingActionButton(
+        onPressed: () {
+          _routeToAddProject();
+        },
+        tooltip: 'Tạo dự án mới',
+        child: const Icon(Icons.add),
+      ));
     }
-    list.add(FloatingActionButton(
-      onPressed: () {
-        _routeToAddProject();
-      },
-      tooltip: 'Tạo dự án mới',
-      child: const Icon(Icons.add),
-    ));
+
     return list;
   }
 

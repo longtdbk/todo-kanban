@@ -25,6 +25,7 @@ class TaskData {
   String name = '';
   String code = '';
   String description = '';
+  String customFields = '';
   String type = '';
   double profit = 0;
   String status = '';

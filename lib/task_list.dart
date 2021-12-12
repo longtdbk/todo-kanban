@@ -11,11 +11,13 @@ import 'package:flutter/material.dart';
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:kanban_dashboard/category_list.dart';
 import 'package:kanban_dashboard/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helper/categories_data.dart';
+import 'helper/custom_field_data.dart';
 import 'helper/project_data.dart';
 import 'helper/task_data.dart';
 import 'helper/task_status_data.dart';
@@ -41,10 +43,8 @@ class TaskListScreen extends StatelessWidget {
           'Quản trị công việc',
         ),
         leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                    builder: (BuildContext context) => const DashboardPage()))),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context)),
         automaticallyImplyLeading: false,
         //title: Text('Login'),
       ),
@@ -66,6 +66,9 @@ class TaskListState extends State<TaskList> {
   // with SingleTickerProviderStateMixin, RestorationMixin {
   var projects = [];
   var tasks = [];
+  List<CustomFieldData> fields = [];
+  // List<String> dropdownValues = [];
+  // String dropdownValue = "1";
   //var tasksMap = [];
   HashMap tasksMap = HashMap<String, List<TaskData>>();
   var taskStatuses = [];
@@ -81,6 +84,7 @@ class TaskListState extends State<TaskList> {
     // String project = '61ab4b5084a5fa00241602dc';
 
     getTaskStatuses(project, category);
+    getCustomFieldsProject(project);
     //getTasksProject(project);
   }
 
@@ -94,6 +98,7 @@ class TaskListState extends State<TaskList> {
   // sau phải theo user nữa chứ ko phải chỉ thế này đâu ??
   Future<void> getTasksProject(String project, String category) async {
     tasks = [];
+
     setState(() {
       isLoading = true;
     });
@@ -137,6 +142,7 @@ class TaskListState extends State<TaskList> {
   // tạm đã --> để xong phần giao diện (rồi add Task ...)
   Future<void> getTaskStatuses(String project, String category) async {
     taskStatuses = [];
+    tasksMap = HashMap<String, List<TaskData>>();
     setState(() {
       isLoading = true;
     });
@@ -169,6 +175,85 @@ class TaskListState extends State<TaskList> {
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
+  }
+
+  // sau phải theo user nữa chứ ko phải chỉ thế này đâu ??
+  Future<void> getCustomFieldsProject(String project) async {
+    fields = [];
+    setState(() {
+      isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    var url = 'http://www.vietinrace.com/srvTD/getCustomField/' + project;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        CustomFieldData field = CustomFieldData();
+        field.name = dat['name'];
+        field.code = dat['name'];
+        field.id = dat['id'];
+        field.value = dat['value'];
+        field.isUse = dat['isUse'];
+        fields.add(field);
+        var data = jsonDecode(field.value.replaceAll("'", "\""));
+        HashMap<String, String> values = HashMap<String, String>();
+        for (int i = 1; i <= data.length; i++) {
+          values[i.toString()] = data[i.toString()];
+        }
+        field.valueFields = values;
+        // dropdownValues.add("");
+      }
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  Future<void> createTask(TaskData taskData) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    final response = await http.post(
+        Uri.parse('http://www.vietinrace.com/srvTD/addTaskPost/'),
+        headers: {
+          //'Content-Type': 'application/json; charset=UTF-8',
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        encoding: Encoding.getByName('utf-8'),
+        body: {
+          'name': taskData.name,
+          'description': taskData.description,
+          'status': taskData.status,
+          'profit': taskData.profit.toString(),
+          'project': widget.project!.id,
+          'email': prefs.getString('email'),
+          'category': widget.category!.id,
+          'custom_fields': taskData.customFields,
+          'type': ''
+        });
+    getTaskStatuses(project, category);
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      // var status = json['data'][0]['status'];
+      var msg = json['data'][0]['msg'];
+      showInSnackBar(msg);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+    //Navigator.pop(context);
   }
 
   void _routeToAddProject() {
@@ -219,6 +304,7 @@ class TaskListState extends State<TaskList> {
   }
 
   void createTabItem() {
+    imageSliders = [];
     for (int i = 0; i < taskStatuses.length; i++) {
       Widget w = Container(
           margin: EdgeInsets.all(6.0),
@@ -260,10 +346,12 @@ class TaskListState extends State<TaskList> {
             ),
             // )),
             // ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             FloatingActionButton(
+              heroTag: null, // done luôn :))
               onPressed: () {
-                showBottomModalAdd(taskStatuses[i].id);
+                // showBottomModalAdd(taskStatuses[i].id);
+                showBottomModalAdd2(i);
                 // _routeToAddCategory();
                 //createModal();
               },
@@ -331,7 +419,229 @@ class TaskListState extends State<TaskList> {
         return TaskAdd(
             taskStatusId: id,
             category: widget.category,
+            fields: fields,
             project: widget.project!);
+      },
+    );
+  }
+
+  void _handleSubmitted(int taskStatusIndex, String name, String description,
+      double profit, List<String> fieldValues) {
+    //String taskStatus = widget.taskStatusId!;
+    TaskData taskData = TaskData();
+    taskData.status = taskStatuses[taskStatusIndex].id;
+    taskData.description = description;
+    taskData.name = name;
+    taskData.profit = profit;
+
+    String value = "{";
+    for (int i = 0; i < fieldValues.length; i++) {
+      if (fieldValues[i] != "") {
+        value += "'" + fields[i].name + "':'" + fieldValues[i] + "',";
+      }
+    }
+    value = value != "{" ? value.substring(0, value.length - 1) + "}" : "{}";
+    taskData.customFields = value;
+
+    createTask(taskData);
+    //showInSnackBar("Tên:" + person.name + "SĐT:" + person.phoneNumber);
+  }
+
+  // List<Widget> createCustomFields() {
+  //   // tao cac truong
+  //   List<Widget> _customFields = [];
+
+  //   for (int i = 0; i < fields.length; i++) {
+  //     List<Widget> _rowsItem = [];
+  //     _rowsItem.add(const SizedBox(width: 20));
+  //     _rowsItem.add(Text(fields[i].name));
+  //     _rowsItem.add(const SizedBox(width: 20));
+  //     _rowsItem.add(Text(dropdownValue));
+  //     var data = jsonDecode(fields[i].value.replaceAll("'", "\""));
+  //     List<PopupMenuItem<String>> menu = [];
+  //     for (int j = 1; j <= data.length; j++) {
+  //       var menuItem = PopupMenuItem<String>(
+  //           value: j.toString(),
+  //           child: ListTile(
+  //               // leading: const Icon(Icons.visibility),
+  //               title: Text(
+  //             data[j.toString()],
+  //           )));
+  //       menu.add(menuItem);
+  //     }
+
+  //     PopupMenuButton<String> popupMenu = PopupMenuButton<String>(
+  //       padding: EdgeInsets.zero,
+  //       onSelected: (value) => {
+  //         setState(() {
+  //           dropdownValue = data[value];
+  //           // valueSelected = data[value];
+  //         }),
+  //         dropdownValues[i] == data[value]
+  //       },
+  //       itemBuilder: (context) => menu,
+  //     );
+
+  //     _rowsItem.add(popupMenu);
+  //     _customFields.add(Row(children: _rowsItem));
+  //   }
+  //   return _customFields;
+  // }
+
+  List<PopupMenuEntry<String>> creteMenuSample(int i) {
+    List<PopupMenuEntry<String>> menu = [];
+    var data = jsonDecode(fields[i].value.replaceAll("'", "\""));
+    for (int j = 1; j <= data.length; j++) {
+      var menuItem = PopupMenuItem<String>(
+          value: j.toString(),
+          child: ListTile(
+              // leading: const Icon(Icons.visibility),
+              title: Text(
+            data[j.toString()],
+          )));
+      menu.add(menuItem);
+    }
+    return menu;
+  }
+
+  // List<Widget> createCustomFields2() {
+  //   // tao cac truong
+  //   List<Widget> _customFields = [];
+
+  //   for (int i = 0; i < fields.length; i++) {
+  //     List<Widget> _rowsItem = [];
+
+  //     _rowsItem.add(Text(fields[i].name));
+
+  //     var data = jsonDecode(fields[i].value.replaceAll("'", "\""));
+  //     List<DropdownMenuItem<String>> menu = [];
+  //     // var dropdownValue = "";
+
+  //     if (data.length > 0) {
+  //       for (int j = 1; j <= data.length; j++) {
+  //         var menuItem = DropdownMenuItem<String>(
+  //           value: j.toString(),
+  //           child: Text(data[j.toString()]),
+  //         );
+  //         menu.add(menuItem);
+  //       }
+  //       dropdownValues[i] = '1';
+  //       //dropdownValues.add(data['1']);
+  //       DropdownButton<String> dropDownItem = DropdownButton<String>(
+  //           value: dropdownValue,
+  //           icon: const Icon(Icons.arrow_downward),
+  //           elevation: 16,
+  //           style: const TextStyle(color: Colors.deepPurple),
+  //           underline: Container(
+  //             height: 2,
+  //             color: Colors.deepPurpleAccent,
+  //           ),
+  //           onChanged: (String? newValue) {
+  //             setState(() {
+  //               dropdownValue = newValue!;
+  //             });
+  //           },
+  //           items: menu);
+
+  //       _rowsItem.add(dropDownItem);
+  //       _customFields.add(Row(children: _rowsItem));
+  //     }
+  //   }
+  //   return _customFields;
+  // }
+
+  void showBottomModalAdd2(int taskStatusIndex) {
+    String name = "";
+    String desc = "";
+    double profit = 0;
+    List<String> dropdownTexts = [];
+    List<String> dropdownValues = [];
+    for (int i = 0; i < fields.length; i++) {
+      dropdownValues.add("");
+      dropdownTexts.add("");
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        // dropdownValues.add("");
+        // dropdownValues.add("");
+        // bool valueChecked = false;
+
+        return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+          return Padding(
+              padding: MediaQuery.of(context).viewInsets,
+              child: SizedBox(
+                  height: 450,
+                  child: Column(children: <Widget>[
+                    Padding(
+                        padding: const EdgeInsets.all(15),
+                        child: TextField(
+                          onChanged: (value) => {name = value},
+                          //controller: editingController,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Tên công việc',
+                          ),
+                        )),
+                    Padding(
+                      padding: const EdgeInsets.all(15),
+                      child: TextField(
+                        onChanged: (value) => {desc = value},
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Mô tả',
+                        ),
+                        maxLines: 3,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(15),
+                      child: TextField(
+                        onChanged: (value) => {profit = double.parse(value)},
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Lợi ích',
+                          suffixText: 'VNĐ',
+                        ),
+                      ),
+                    ),
+                    // Column(
+                    //   children: createCustomFields(),
+                    // ),
+                    for (int i = 0; i < fields.length; i++)
+                      Row(children: [
+                        const SizedBox(width: 20),
+                        Text(fields[i].name),
+                        const SizedBox(width: 20),
+                        Text(dropdownTexts[i]),
+                        PopupMenuButton<String>(
+                          padding: EdgeInsets.zero,
+                          onSelected: (value) => {
+                            setState(() {
+                              dropdownTexts[i] = fields[i].valueFields[value];
+                              dropdownValues[i] = value;
+                              // valueSelected = data[value];
+                            }),
+                            //dropdownValues[i] == data[value]
+                          },
+                          itemBuilder: (context) => creteMenuSample(i),
+                        )
+                      ]),
+                    ElevatedButton(
+                      child: const Text('Tạo'),
+                      onPressed: () {
+                        if (name != "") {
+                          _handleSubmitted(taskStatusIndex, name, desc, profit,
+                              dropdownValues);
+                          Navigator.of(context).pop();
+                        }
+                      },
+                    )
+                  ])));
+        });
       },
     );
   }
@@ -347,49 +657,54 @@ class TaskListState extends State<TaskList> {
         onRefresh: () async {
           //Do whatever you want on refrsh.Usually update the date of the listview
           //getTaskStatuses('61ab4b5084a5fa00241602dc');
-          getTasksProject(project, category);
+          getTaskStatuses(project, category);
         },
         child: Scrollbar(
-          child: Column(children: [
-            Padding(
-                padding: const EdgeInsets.only(top: 600 * .025), // để lên top
-                child: CarouselSlider(
-                  items: imageSliders,
-                  carouselController: _controller,
-                  options: CarouselOptions(
-                      autoPlay: false,
-                      enlargeCenterPage: true,
-                      height: MediaQuery.of(context).size.height * 0.8,
-                      // aspectRatio: 2.0,
-                      enableInfiniteScroll:
-                          false, // muốn sang trái sang phải ok
-                      onPageChanged: (index, reason) {
-                        setState(() {
-                          _current = index;
-                        });
-                      }),
-                )),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: taskStatuses.asMap().entries.map((entry) {
-                return GestureDetector(
-                  //onTap: () => _controller.animateToPage(entry.key),
-                  child: Container(
-                    width: 6.0,
-                    height: 6.0,
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 8.0, horizontal: 4.0),
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: (Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : Colors.black)
-                            .withOpacity(_current == entry.key ? 0.9 : 0.4)),
+          child: isLoading
+              ? const Center(child: LinearProgressIndicator())
+              : Column(children: [
+                  Padding(
+                      padding:
+                          const EdgeInsets.only(top: 600 * .025), // để lên top
+                      child: CarouselSlider(
+                        items: imageSliders,
+                        carouselController: _controller,
+                        options: CarouselOptions(
+                            autoPlay: false,
+                            enlargeCenterPage: true,
+                            height: MediaQuery.of(context).size.height * 0.8,
+                            // aspectRatio: 2.0,
+                            enableInfiniteScroll:
+                                false, // muốn sang trái sang phải ok
+                            onPageChanged: (index, reason) {
+                              setState(() {
+                                _current = index;
+                              });
+                            }),
+                      )),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: taskStatuses.asMap().entries.map((entry) {
+                      return GestureDetector(
+                        //onTap: () => _controller.animateToPage(entry.key),
+                        child: Container(
+                          width: 6.0,
+                          height: 6.0,
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8.0, horizontal: 4.0),
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black)
+                                  .withOpacity(
+                                      _current == entry.key ? 0.9 : 0.4)),
+                        ),
+                      );
+                    }).toList(),
                   ),
-                );
-              }).toList(),
-            ),
-          ]),
+                ]),
         ),
         color: Colors.white,
         backgroundColor: Colors.red);
