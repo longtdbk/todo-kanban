@@ -93,6 +93,7 @@ class ProjectListState extends State<ProjectList> {
         project.id = dat['id'];
         project.level = int.parse(dat['level']);
         project.code = dat['code'];
+        project.taskStatuses = dat['task_statuses'];
         projects.add(project);
       }
       // showInSnackBar(msg);

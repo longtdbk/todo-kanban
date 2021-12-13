@@ -69,7 +69,7 @@ class ProjectSingleState extends State<ProjectSingle> {
 
   void createTabItem() {
     _listBody.add(ProjectCategoryScreen(project: widget.project));
-    _listBody.add(TaskStatus());
+    _listBody.add(TaskStatus(projectId: widget.project!.id));
     _listBody.add(CustomFieldList(project: widget.project));
   }
 

@@ -29,10 +29,10 @@ import 'package:http/http.dart' as http;
 import 'task_add.dart';
 
 class TaskListScreen extends StatelessWidget {
-  final ProjectData? project;
+  final String? projectId;
   final CategoryData? category;
 
-  const TaskListScreen({Key? key, this.project, this.category})
+  const TaskListScreen({Key? key, this.projectId, this.category})
       : super(key: key);
 
   @override
@@ -48,15 +48,15 @@ class TaskListScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         //title: Text('Login'),
       ),
-      body: TaskList(project: project, category: category),
+      body: TaskList(projectId: projectId, category: category),
     );
   }
 }
 
 class TaskList extends StatefulWidget {
-  final ProjectData? project;
+  final String? projectId;
   final CategoryData? category;
-  const TaskList({Key? key, this.project, this.category}) : super(key: key);
+  const TaskList({Key? key, this.projectId, this.category}) : super(key: key);
 
   @override
   TaskListState createState() => TaskListState();
@@ -64,7 +64,8 @@ class TaskList extends StatefulWidget {
 
 class TaskListState extends State<TaskList> {
   // with SingleTickerProviderStateMixin, RestorationMixin {
-  var projects = [];
+  //var projects = [];
+  ProjectData projectData = ProjectData();
   var tasks = [];
   List<CustomFieldData> fields = [];
   // List<String> dropdownValues = [];
@@ -79,12 +80,12 @@ class TaskListState extends State<TaskList> {
   @override
   void initState() {
     super.initState();
-    project = widget.project!.id;
+    project = widget.projectId!;
     category = widget.category!.id;
     // String project = '61ab4b5084a5fa00241602dc';
 
-    getTaskStatuses(project, category);
-    getCustomFieldsProject(project);
+    getProject();
+    getCustomFieldsProject();
     //getTasksProject(project);
   }
 
@@ -95,8 +96,37 @@ class TaskListState extends State<TaskList> {
     ));
   }
 
+  Future<void> getProject() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    var url =
+        'http://www.vietinrace.com/srvTD/getProjectID/' + widget.projectId!;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        projectData.id = dat['id'];
+        projectData.name = dat['name'];
+        projectData.taskStatuses = dat['task_statuses'];
+        projectData.code = dat['code'];
+      }
+      getTaskStatuses();
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
   // sau phải theo user nữa chứ ko phải chỉ thế này đâu ??
-  Future<void> getTasksProject(String project, String category) async {
+  Future<void> getTasksProject() async {
     tasks = [];
 
     setState(() {
@@ -108,9 +138,9 @@ class TaskListState extends State<TaskList> {
     //var url = 'http://www.vietinrace.com/srvTD/getTasksProject/' + project;
 
     var url = 'http://www.vietinrace.com/srvTD/getTasksProjectCategory/' +
-        project +
+        widget.projectId! +
         '/' +
-        category;
+        widget.category!.id;
     final response = await http.get(Uri.parse(url));
 
     setState(() {
@@ -140,8 +170,9 @@ class TaskListState extends State<TaskList> {
   }
 
   // tạm đã --> để xong phần giao diện (rồi add Task ...)
-  Future<void> getTaskStatuses(String project, String category) async {
+  Future<void> getTaskStatuses() async {
     taskStatuses = [];
+    List<TaskStatusData> taskStatusesTmp = [];
     tasksMap = HashMap<String, List<TaskData>>();
     setState(() {
       isLoading = true;
@@ -149,7 +180,8 @@ class TaskListState extends State<TaskList> {
 
     final prefs = await SharedPreferences.getInstance();
 
-    var url = 'http://www.vietinrace.com/srvTD/getTaskStatus/' + project;
+    var url =
+        'http://www.vietinrace.com/srvTD/getTaskStatus/' + widget.projectId!;
     final response = await http.get(Uri.parse(url));
 
     setState(() {
@@ -164,21 +196,34 @@ class TaskListState extends State<TaskList> {
             id: dat['id'],
             code: dat['code'],
             shortName: dat['code']);
-        taskStatuses.add(taskStatus);
+        taskStatusesTmp.add(taskStatus);
       }
-
+      //
+      if (projectData.taskStatuses != "{}") {
+        // chi co '1':'f334433' // todo ; vi du the -
+        var projectTaskStatuses =
+            jsonDecode(projectData.taskStatuses.replaceAll("'", "\""));
+        for (int i = 1; i <= projectTaskStatuses.length; i++) {
+          for (int j = 0; j < taskStatusesTmp.length; j++) {
+            if (taskStatusesTmp[j].id == projectTaskStatuses[i.toString()]) {
+              taskStatuses.add(taskStatusesTmp[j]);
+              break;
+            }
+          }
+        }
+      }
       for (int i = 0; i < taskStatuses.length; i++) {
         List<TaskData> taskList = [];
         tasksMap[taskStatuses[i].id] = taskList;
       }
-      getTasksProject(project, category);
+      getTasksProject();
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
   }
 
   // sau phải theo user nữa chứ ko phải chỉ thế này đâu ??
-  Future<void> getCustomFieldsProject(String project) async {
+  Future<void> getCustomFieldsProject() async {
     fields = [];
     setState(() {
       isLoading = true;
@@ -186,7 +231,8 @@ class TaskListState extends State<TaskList> {
 
     final prefs = await SharedPreferences.getInstance();
 
-    var url = 'http://www.vietinrace.com/srvTD/getCustomField/' + project;
+    var url =
+        'http://www.vietinrace.com/srvTD/getCustomField/' + widget.projectId!;
     final response = await http.get(Uri.parse(url));
 
     setState(() {
@@ -235,13 +281,14 @@ class TaskListState extends State<TaskList> {
           'description': taskData.description,
           'status': taskData.status,
           'profit': taskData.profit.toString(),
-          'project': widget.project!.id,
+          'project': projectData.id,
           'email': prefs.getString('email'),
           'category': widget.category!.id,
           'custom_fields': taskData.customFields,
           'type': ''
         });
-    getTaskStatuses(project, category);
+    //getTaskStatuses();
+    getProject();
     setState(() {
       isLoading = false;
     });
@@ -411,19 +458,19 @@ class TaskListState extends State<TaskList> {
   //   }
   // }
 
-  void showBottomModalAdd(String id) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        return TaskAdd(
-            taskStatusId: id,
-            category: widget.category,
-            fields: fields,
-            project: widget.project!);
-      },
-    );
-  }
+  // void showBottomModalAdd(String id) {
+  //   showModalBottomSheet<void>(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     builder: (context) {
+  //       return TaskAdd(
+  //           taskStatusId: id,
+  //           category: widget.category,
+  //           fields: fields,
+  //           project: widget.project!);
+  //     },
+  //   );
+  // }
 
   void _handleSubmitted(int taskStatusIndex, String name, String description,
       double profit, List<String> fieldValues) {
@@ -657,7 +704,7 @@ class TaskListState extends State<TaskList> {
         onRefresh: () async {
           //Do whatever you want on refrsh.Usually update the date of the listview
           //getTaskStatuses('61ab4b5084a5fa00241602dc');
-          getTaskStatuses(project, category);
+          getProject();
         },
         child: Scrollbar(
           child: isLoading

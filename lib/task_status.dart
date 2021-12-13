@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Copyright 2019 The Flutter team. All rights reserved.
@@ -56,7 +57,8 @@ class TaskStatusScreen extends StatelessWidget {
 }
 
 class TaskStatus extends StatefulWidget {
-  const TaskStatus({Key? key}) : super(key: key);
+  final String? projectId;
+  const TaskStatus({Key? key, this.projectId}) : super(key: key);
 
   @override
   TaskStatusState createState() => TaskStatusState();
@@ -65,7 +67,9 @@ class TaskStatus extends StatefulWidget {
 // cái này mục tiêu là hiện hay ẩn --> tạo thành 1 file mới thôi (helper)
 
 class TaskStatusState extends State<TaskStatus> {
-  var categories = [];
+  var taskStatuses = [];
+  List<TaskStatusData> selectedStatus = [];
+  ProjectData projectData = ProjectData();
   bool isLoading = false;
 
   @override
@@ -73,6 +77,7 @@ class TaskStatusState extends State<TaskStatus> {
     super.initState();
     //getProject('cai-tien');
     // getTaskStatusSimple();
+    getTaskStatus();
   }
 
   void showInSnackBar(String value) {
@@ -82,15 +87,16 @@ class TaskStatusState extends State<TaskStatus> {
     ));
   }
 
-  Future<void> getTaskStatus(String code) async {
-    categories = [];
+  Future<void> getTaskStatus() async {
+    taskStatuses = [];
     setState(() {
       isLoading = true;
     });
 
     final prefs = await SharedPreferences.getInstance();
 
-    var url = 'http://www.vietinrace.com/srvTD/getProject/' + code;
+    var url =
+        'http://www.vietinrace.com/srvTD/getTaskStatus/' + widget.projectId!;
     final response = await http.get(Uri.parse(url));
 
     setState(() {
@@ -100,22 +106,196 @@ class TaskStatusState extends State<TaskStatus> {
       var json = jsonDecode(response.body);
       var data = json['data'];
       for (var dat in data) {
-        CategoryData category = CategoryData();
-        category.name = dat['name'];
-        category.code = dat['code'];
-        categories.add(category);
+        TaskStatusData taskStatus = TaskStatusData(
+            id: dat['id'],
+            name: dat['name'],
+            shortName: dat['name'],
+            code: dat['code']);
+        taskStatuses.add(taskStatus);
+      }
+      getProject();
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  Future<void> getProject() async {
+    selectedStatus = [];
+    setState(() {
+      isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    var url =
+        'http://www.vietinrace.com/srvTD/getProjectId/' + widget.projectId!;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        projectData.id = dat['id'];
+        projectData.name = dat['name'];
+        projectData.taskStatuses = dat['task_statuses'];
+        projectData.code = dat['code'];
+      }
+
+      var taskStatusesMap =
+          jsonDecode(projectData.taskStatuses.replaceAll("'", "\""));
+
+      for (int i = 1; i <= taskStatusesMap.length; i++) {
+        // TaskStatusData taskStatusData = TaskStatusData(
+        //     id: i.toString(),
+        //     name: taskStatuses[i].name,
+        //     shortName: taskStatuses[i].name,
+        //     code: taskStatuses[i].code);
+        for (int j = 0; j < taskStatuses.length; j++) {
+          if (taskStatuses[j].id == taskStatusesMap[i.toString()]) {
+            selectedStatus.add(taskStatuses[j]);
+            break;
+          }
+        }
       }
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
   }
 
-  void getTaskStatusSimple() {
-    CategoryData category = CategoryData();
-    category.name = 'Khối vận hành';
-    category.code = 'khoi-van-hanh';
-    categories.add(category);
+  Future<void> addTaskStatus(String name) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    final response = await http.post(
+        Uri.parse('http://www.vietinrace.com/srvTD/addTaskStatusPost/'),
+        headers: {
+          //'Content-Type': 'application/json; charset=UTF-8',
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        encoding: Encoding.getByName('utf-8'),
+        body: {
+          'name': name,
+          'project': widget.projectId!,
+        });
+
+    updateProjectTaskStatus();
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var status = json['data'][0]['status'];
+      var msg = json['data'][0]['msg'];
+      if (status == 'true') {
+        var id = json['data'][0]['id'];
+        var code = json['data'][0]['code'];
+        // add vao cuoi thoi :)
+        selectedStatus.add(
+            TaskStatusData(id: id, name: name, shortName: name, code: code));
+      }
+      showInSnackBar(msg);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+    //Navigator.pop(context);
   }
+
+  Future<void> editTaskStatus(String name, String taskStatusId) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    final response = await http.post(
+        Uri.parse('http://www.vietinrace.com/srvTD/editTaskStatusPost/'),
+        headers: {
+          //'Content-Type': 'application/json; charset=UTF-8',
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        encoding: Encoding.getByName('utf-8'),
+        body: {
+          'name': name,
+          'id': taskStatusId,
+          'project': widget.projectId!,
+        });
+
+    // updateProjectTaskStatus();
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var status = json['data'][0]['status'];
+      var msg = json['data'][0]['msg'];
+      if (status == 'true') {
+        for (int i = 0; i < selectedStatus.length; i++) {
+          if (selectedStatus[i].id == taskStatusId) {
+            selectedStatus[i] = TaskStatusData(
+                id: taskStatusId, name: name, shortName: name, code: name);
+            break;
+          }
+        }
+      }
+      // add vao cuoi thoi :)
+      showInSnackBar(msg);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+    //Navigator.pop(context);
+  }
+
+  // Sửa thứ tự thôi, tên không cần --> OK luôn
+  Future<void> updateProjectTaskStatus() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    String value = "{";
+    for (int i = 0; i < selectedStatus.length; i++) {
+      value += "'" + (i + 1).toString() + "':'" + selectedStatus[i].id + "',";
+    }
+    value = value != "{" ? value.substring(0, value.length - 1) + "}" : "{}";
+
+    final response = await http.post(
+        Uri.parse('http://www.vietinrace.com/srvTD/updateProjectPost/'),
+        headers: {
+          //'Content-Type': 'application/json; charset=UTF-8',
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        encoding: Encoding.getByName('utf-8'),
+        body: {
+          'id': widget.projectId,
+          'value': value,
+          'option': '1',
+        });
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      // var status = json['data'][0]['status'];
+      var msg = json['data'][0]['msg'];
+      showInSnackBar(msg);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+    //Navigator.pop(context);
+  }
+  // void getTaskStatusSimple() {
+  //   CategoryData category = CategoryData();
+  //   category.name = 'Khối vận hành';
+  //   category.code = 'khoi-van-hanh';
+  //   categories.add(category);
+  // }
 
   void _routeToAddProject() {
     Navigator.of(context).pushReplacement(MaterialPageRoute(
@@ -128,30 +308,30 @@ class TaskStatusState extends State<TaskStatus> {
     'Test',
   ];
 
-  final List<TaskStatusData> selectedStatus = [
-    const TaskStatusData(
-        name: "To do", id: "1", shortName: "to do", code: "to-do"),
-    const TaskStatusData(
-        name: "Doing", id: "2", shortName: "doing", code: "doing"),
-    const TaskStatusData(
-        name: "Block", id: "3", shortName: "block", code: "block"),
-    const TaskStatusData(
-        name: "Block2", id: "4", shortName: "block2", code: "block2"),
-    const TaskStatusData(
-        name: "Block3", id: "5", shortName: "block3", code: "block3"),
-    const TaskStatusData(
-        name: "Block4", id: "6", shortName: "block4", code: "block4"),
-    const TaskStatusData(
-        name: "Block5", id: "7", shortName: "block5", code: "block5"),
-    const TaskStatusData(
-        name: "Block6", id: "8", shortName: "block6", code: "block6"),
-    const TaskStatusData(
-        name: "Block7", id: "9", shortName: "block7", code: "block7"),
-    const TaskStatusData(
-        name: "Block8", id: "10", shortName: "block8", code: "block8"),
-    const TaskStatusData(
-        name: "Block9", id: "11", shortName: "block9", code: "block9"),
-  ];
+  // final List<TaskStatusData> selectedStatus = [
+  //   const TaskStatusData(
+  //       name: "To do", id: "1", shortName: "to do", code: "to-do"),
+  //   const TaskStatusData(
+  //       name: "Doing", id: "2", shortName: "doing", code: "doing"),
+  //   const TaskStatusData(
+  //       name: "Block", id: "3", shortName: "block", code: "block"),
+  //   const TaskStatusData(
+  //       name: "Block2", id: "4", shortName: "block2", code: "block2"),
+  //   const TaskStatusData(
+  //       name: "Block3", id: "5", shortName: "block3", code: "block3"),
+  //   const TaskStatusData(
+  //       name: "Block4", id: "6", shortName: "block4", code: "block4"),
+  //   const TaskStatusData(
+  //       name: "Block5", id: "7", shortName: "block5", code: "block5"),
+  //   const TaskStatusData(
+  //       name: "Block6", id: "8", shortName: "block6", code: "block6"),
+  //   const TaskStatusData(
+  //       name: "Block7", id: "9", shortName: "block7", code: "block7"),
+  //   const TaskStatusData(
+  //       name: "Block8", id: "10", shortName: "block8", code: "block8"),
+  //   const TaskStatusData(
+  //       name: "Block9", id: "11", shortName: "block9", code: "block9"),
+  // ];
 
   bool inReorder = false;
 
@@ -165,6 +345,7 @@ class TaskStatusState extends State<TaskStatus> {
         ..clear()
         ..addAll(newItems);
     });
+    updateProjectTaskStatus();
   }
 
   @override
@@ -177,22 +358,24 @@ class TaskStatusState extends State<TaskStatus> {
           //Do whatever you want on refrsh.Usually update the date of the listview
           //getProject('cai-tien');
         },
-        child: ListView(
-          controller: scrollController,
-          // Prevent the ListView from scrolling when an item is
-          // currently being dragged.
-          padding: const EdgeInsets.only(bottom: 24),
-          children: <Widget>[
-            _buildHeadline('Vertically'),
-            const Divider(height: 0),
-            // _buildVerticalLanguageList(),
-            _buildVerticalStatusList(),
-            _buildHeadline('Horizontally'),
-            // _buildHorizontalLanguageList(),
-            _buildHorizontalTaskStatusList(),
-            const SizedBox(height: 500),
-          ],
-        ),
+        child: isLoading
+            ? const LinearProgressIndicator()
+            : ListView(
+                controller: scrollController,
+                // Prevent the ListView from scrolling when an item is
+                // currently being dragged.
+                padding: const EdgeInsets.only(bottom: 24),
+                children: <Widget>[
+                  _buildHeadline('Vertically'),
+                  const Divider(height: 0),
+                  // _buildVerticalLanguageList(),
+                  _buildVerticalStatusList(),
+                  _buildHeadline('Horizontally'),
+                  // _buildHorizontalLanguageList(),
+                  _buildHorizontalTaskStatusList(),
+                  const SizedBox(height: 500),
+                ],
+              ),
         color: Colors.white,
         backgroundColor: Colors.red);
   }
@@ -342,7 +525,6 @@ class TaskStatusState extends State<TaskStatus> {
   }
 
 // // đã hiểu cái này --> ko cần xem lại nữa
-
   Widget _buildTileStatus(TaskStatusData taskStatus) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
@@ -379,10 +561,12 @@ class TaskStatusState extends State<TaskStatus> {
         backgroundColor: Color(0xFF7BC043),
         foregroundColor: Colors.white,
         //onPressed: () => setState(() => selectedLanguages.remove(lang)),
-        onPressed: (BuildContext context) =>
-            {setState(() => selectedStatus.remove(taskStatus))},
-        label: 'Archive',
-        icon: Icons.archive,
+        onPressed: (BuildContext context) => {
+          // setState(() => selectedStatus.remove(taskStatus))
+          editTaskStatusDialog(taskStatus)
+        },
+        label: 'Sửa tên',
+        icon: Icons.edit,
       ),
       SlidableAction(
         //closeOnTap: true,
@@ -496,23 +680,97 @@ class TaskStatusState extends State<TaskStatus> {
     );
   }
 
+  void addTaskStatusDialog() {
+    TextEditingController editingController = TextEditingController(text: '');
+    showCupertinoDialog(
+        context: context,
+        builder: (context) {
+          return CupertinoAlertDialog(
+              title: Text('Thêm trạng thái công việc'),
+              content: Container(
+                height: 80,
+                alignment: Alignment.center,
+                padding: EdgeInsets.all(10),
+                child: CupertinoTextField(
+                  controller: editingController,
+                  autofocus: true,
+                ),
+              ),
+              actions: <Widget>[
+                CupertinoDialogAction(
+                  child: Text('Cancel'),
+                  isDestructiveAction: true,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                CupertinoDialogAction(
+                    child: Text('Add'),
+                    isDefaultAction: true,
+                    onPressed: () {
+                      if (editingController.text.isNotEmpty) {
+                        // setState(() {});
+                        addTaskStatus(editingController.text);
+                      }
+                      Navigator.of(context).pop();
+                    }),
+              ]);
+        });
+  }
+
+  void editTaskStatusDialog(TaskStatusData taskStatusData) {
+    TextEditingController editingController =
+        TextEditingController(text: taskStatusData.name);
+    showCupertinoDialog(
+        context: context,
+        builder: (context) {
+          return CupertinoAlertDialog(
+              title: Text('Sửa tên trạng thái'),
+              content: Container(
+                height: 80,
+                alignment: Alignment.center,
+                padding: EdgeInsets.all(10),
+                child: CupertinoTextField(
+                  controller: editingController,
+                  autofocus: true,
+                ),
+              ),
+              actions: <Widget>[
+                CupertinoDialogAction(
+                  child: Text('Cancel'),
+                  isDestructiveAction: true,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                CupertinoDialogAction(
+                    child: Text('Update'),
+                    isDefaultAction: true,
+                    onPressed: () {
+                      if (editingController.text.isNotEmpty) {
+                        // setState(() {});
+                        editTaskStatus(editingController.text, taskStatusData.id);
+                      }
+                      Navigator.of(context).pop();
+                    }),
+              ]);
+        });
+  }
+
   // build + button
   Widget _buildFooter(BuildContext context, TextTheme textTheme) {
     return Box(
       color: Colors.white,
-      onTap: () async {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const DashboardPage(),
-          ),
-        );
+      onTap: () {
+        // final result = await Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => const DashboardPage(),
+        //   ),
+        // );
 
-        if (result != null && !selectedStatus.contains(result)) {
-          setState(() {
-            selectedStatus.add(result);
-          });
-        }
+        // if (result != null && !selectedStatus.contains(result)) {
+        //   setState(() {
+        //     selectedStatus.add(result);
+        //   });
+        // }
+        addTaskStatusDialog();
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,

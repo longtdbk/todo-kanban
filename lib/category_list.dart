@@ -404,7 +404,8 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => TaskListScreen(
-                              project: widget.project, category: category),
+                              projectId: widget.project!.id,
+                              category: category),
                         ),
                       );
                     },
