@@ -25,8 +25,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_treeview/flutter_treeview.dart';
 
 class CategoryListScreen extends StatelessWidget {
-  final ProjectData? project;
-  const CategoryListScreen({Key? key, this.project}) : super(key: key);
+  final String? projectId;
+  const CategoryListScreen({Key? key, this.projectId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -45,16 +45,16 @@ class CategoryListScreen extends StatelessWidget {
       ),
       body: ProjectCategoryScreen(
         //title: 'TreeViewExample',
-        project: project,
+        projectId: projectId,
       ),
     );
   }
 }
 
 class ProjectCategoryScreen extends StatefulWidget {
-  ProjectCategoryScreen({Key? key, this.project}) : super(key: key);
+  final String? projectId;
+  ProjectCategoryScreen({Key? key, this.projectId}) : super(key: key);
   //final String? title;
-  final ProjectData? project;
 
   @override
   _ProjectCategoryScreenState createState() => _ProjectCategoryScreenState();
@@ -64,7 +64,9 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
   List<CategoriesData> categories = [];
   bool isLoading = false;
 
-  String _selectedNode = 'khoi-van-hanh';
+  ProjectData projectData = ProjectData();
+
+  String _selectedNode = '';
   List<Node> _nodes = [];
   TreeViewController _treeViewController = TreeViewController();
   bool docsOpen = true;
@@ -95,13 +97,13 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
   ExpanderPosition _expanderPosition = ExpanderPosition.start;
   ExpanderType _expanderType = ExpanderType.caret;
   ExpanderModifier _expanderModifier = ExpanderModifier.none;
-  bool _allowParentSelect = false;
+  bool _allowParentSelect = true;
   bool _supportParentDoubleTap = false;
   int projectLevel = 0;
 
   @override
   void initState() {
-    getAllCategorys();
+    getProject();
     super.initState();
   }
 
@@ -112,16 +114,80 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
     ));
   }
 
+  Future<void> getProject() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    var url =
+        'http://www.vietinrace.com/srvTD/getProjectId/' + widget.projectId!;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        projectData.id = dat['id'];
+        projectData.name = dat['name'];
+        projectData.taskStatuses = dat['task_statuses'];
+        projectData.code = dat['code'];
+        projectData.level = int.parse(dat['level']);
+      }
+      getAllCategorys();
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  Future<void> updateProjectLevel(int level) async {
+    if (level <= projectData.level) {
+      getProject();
+    } else {
+      setState(() {
+        isLoading = true;
+      });
+
+      final response = await http.post(
+          Uri.parse('http://www.vietinrace.com/srvTD/updateProjectPost/'),
+          headers: {
+            //'Content-Type': 'application/json; charset=UTF-8',
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          encoding: Encoding.getByName('utf-8'),
+          body: {
+            'id': widget.projectId,
+            'value': level.toString(),
+            'option': '3',
+          });
+      setState(() {
+        isLoading = false;
+      });
+      if (response.statusCode == 200) {
+        var json = jsonDecode(response.body);
+        var status = json['data'][0]['status'];
+        var msg = json['data'][0]['msg'];
+        if (status == "true") {
+          getProject();
+        }
+        showInSnackBar(msg);
+      } else {
+        showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+      }
+    }
+    //Navigator.pop(context);
+  }
+
   Future<void> getAllCategorys() async {
     categories = [];
     setState(() {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
-
     var url = 'http://www.vietinrace.com/srvTD/getCategoriesProject/' +
-        widget.project!.id;
+        widget.projectId!;
     //prefs.getString('email')!;
     final response = await http.get(Uri.parse(url));
 
@@ -136,15 +202,19 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
             name: dat['name'],
             id: dat['id'],
             code: dat['code'],
-            key: dat['key'],
+            key: dat['id'],
             level: int.parse(dat['level']),
             parent: dat['parent'],
             isParent: true);
         categories.add(category);
       }
+      if (categories.length > 0) {
+        _selectedNode = categories[0].id;
+      }
 
-      List<Node> _nodeTrees = _setNodesTree(widget.project!.level, categories);
+      List<Node> _nodeTrees = _setNodesTree(projectData.level, categories);
 
+      _nodes = [];
       for (int i = 0; i < _nodeTrees.length; i++) {
         _nodes.add(_nodeTrees[i]);
       }
@@ -156,6 +226,94 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
+  }
+
+  Future<void> editCategory(String name, String categoryId) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final response = await http.post(
+        Uri.parse('http://www.vietinrace.com/srvTD/editCategoryPost/'),
+        headers: {
+          //'Content-Type': 'application/json; charset=UTF-8',
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        encoding: Encoding.getByName('utf-8'),
+        body: {
+          'name': name,
+          'id': categoryId,
+          'project': widget.projectId!,
+        });
+
+    // updateProjectTaskStatus();
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var status = json['data'][0]['status'];
+      var msg = json['data'][0]['msg'];
+      if (status == 'true') {
+        getProject();
+      }
+      // add vao cuoi thoi :)
+      showInSnackBar(msg);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+    //Navigator.pop(context);
+  }
+
+  Future<void> addCategoryChild(String name, String parentCategoryId) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    // CategoriesData categoryParent;
+    CategoryData categoryData = CategoryData();
+    for (int i = 0; i < categories.length; i++) {
+      if (categories[i].id == parentCategoryId) {
+        // categoryParent = categories[i];
+        categoryData.level = categories[i].level + 1;
+        categoryData.parent = categories[i].id;
+      }
+    }
+
+    // final prefs = await SharedPreferences.getInstance();
+
+    final response = await http.post(
+        Uri.parse('http://www.vietinrace.com/srvTD/addCategoryPost/'),
+        headers: {
+          //'Content-Type': 'application/json; charset=UTF-8',
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        encoding: Encoding.getByName('utf-8'),
+        body: {
+          'name': name,
+          'category_parent': parentCategoryId,
+          'level': categoryData.level.toString(),
+          'project': widget.projectId!,
+        });
+
+    // updateProjectTaskStatus();
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var status = json['data'][0]['status'];
+      var msg = json['data'][0]['msg'];
+      if (status == 'true') {
+        updateProjectLevel(categoryData.level);
+        //getProject();
+      }
+      // add vao cuoi thoi :)
+      showInSnackBar(msg);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+    //Navigator.pop(context);
   }
 
   // có thể viết theo qui nạp ??? nhưng mà thường lâu
@@ -210,38 +368,6 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
     }
     return _nodes;
   }
-
-  // void setNodeLevel(HashMap<String, HashMap<String, Node>> hashMap, int level,
-  //     int projectLevel, List<CategoryData> categories) {
-  //   // nếu là node lá;
-  //   if (level == projectLevel) {
-  //     for (int k = 0; k < categories.length; k++) {
-  //       // đây là node nhé
-  //       if (categories[k].level == projectLevel) {
-  //         hashMap[projectLevel.toString()][categories[k].key] =
-  //             Node(label: categories[k].name, key: categories[k].key);
-  //       }
-  //     }
-  //   } else {
-  //     for (int k = 0; k < categories.length; k++) {
-  //       // đây là node nhé
-  //       if (categories[k].level == level) {
-  //         List<Node> nodeChild = [];
-  //         int childLevel = level - 1;
-  //         for (int d = 0; d < categories.length; d++) {
-  //           if ((categories[d].level == childLevel) &&
-  //               (categories[d].parent == categories[k].key)) {
-  //             nodeChild.add(hashMap[childLevel.toString()][categories[d].key]!);
-  //           }
-  //         }
-  //         hashMap[project_level.toString()][categories[k].key] = Node(
-  //           label: categories[k].name,
-  //           key: categories[k].key,
-  //         );
-  //       }
-  //     }
-  //   }
-  // }
 
   ListTile _makeExpanderPosition() {
     return ListTile(
@@ -317,6 +443,54 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
     );
   }
 
+  void showAddChildren() {
+    TextEditingController editingController = TextEditingController(text: '');
+    showCupertinoDialog(
+        context: context,
+        builder: (context) {
+          return CupertinoAlertDialog(
+              title: const Text('Thêm Danh Mục Con'),
+              content: Container(
+                height: 80,
+                alignment: Alignment.center,
+                padding: EdgeInsets.all(10),
+                child: CupertinoTextField(
+                  controller: editingController,
+                  autofocus: true,
+                ),
+              ),
+              actions: <Widget>[
+                CupertinoDialogAction(
+                  child: const Text('Cancel'),
+                  isDestructiveAction: true,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                CupertinoDialogAction(
+                  child: const Text('Update'),
+                  isDefaultAction: true,
+                  onPressed: () {
+                    if (editingController.text.isNotEmpty) {
+                      addCategoryChild(editingController.text,
+                          _treeViewController.selectedNode!.key);
+                      // setState(() {
+                      //   Node _node =
+                      //       _treeViewController.selectedNode!;
+                      //   _treeViewController =
+                      //       _treeViewController.withUpdateNode(
+                      //           _treeViewController.selectedKey!,
+                      //           _node.copyWith(
+                      //               label: editingController.text));
+                      // });
+                      //debugPrint(editingController.text);
+
+                    }
+                    Navigator.of(context).pop();
+                  },
+                )
+              ]);
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     TreeViewTheme _treeViewTheme = TreeViewTheme(
@@ -353,81 +527,77 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
           FocusScope.of(context).requestFocus(FocusNode());
         },
         child: Container(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           height: double.infinity,
-          child: Column(
-            children: <Widget>[
-//               Container(
-//                 height: 160,
-//                 child: Column(
-//                   children: <Widget>[
-//                     // _makeExpanderPosition(),
-//                     // _makeExpanderType(),
-//                     // _makeExpanderModifier(),
-// //                    _makeAllowParentSelect(),
-// //                    _makeSupportParentDoubleTap(),
-//                   ],
-//                 ),
-//               ),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: EdgeInsets.all(10),
-                  child: TreeView(
-                    controller: _treeViewController,
-                    allowParentSelect: _allowParentSelect,
-                    supportParentDoubleTap: _supportParentDoubleTap,
-                    onExpansionChanged: (key, expanded) =>
-                        _expandNode(key, expanded),
-                    onNodeTap: (key) {
-                      debugPrint('Selected: $key');
-
-                      setState(() {
-                        _selectedNode = key;
-                        _treeViewController =
-                            _treeViewController.copyWith(selectedKey: key);
-                      });
-                    },
-                    onNodeDoubleTap: (key) {
-                      CategoryData category = CategoryData();
-                      for (int i = 0; i < categories.length; i++) {
-                        if (categories[i].key == key) {
-                          category.code = categories[i].code;
-                          category.name = categories[i].name;
-                          category.id = categories[i].id;
-                          category.key = categories[i].key;
-                        }
-                      }
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TaskListScreen(
-                              projectId: widget.project!.id,
-                              category: category),
+          child: isLoading
+              ? const LinearProgressIndicator()
+              : Column(
+                  children: <Widget>[
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      );
-                    },
-                    theme: _treeViewTheme,
-                  ),
+                        padding: const EdgeInsets.all(10),
+                        child: TreeView(
+                          controller: _treeViewController,
+                          allowParentSelect: _allowParentSelect,
+                          supportParentDoubleTap: _supportParentDoubleTap,
+                          onExpansionChanged: (key, expanded) =>
+                              _expandNode(key, expanded),
+                          onNodeTap: (key) {
+                            debugPrint('Selected: $key');
+
+                            setState(() {
+                              _selectedNode = key;
+                              _treeViewController = _treeViewController
+                                  .copyWith(selectedKey: key);
+                            });
+                          },
+                          onNodeDoubleTap: (key) {
+                            CategoryData category = CategoryData();
+                            for (int i = 0; i < categories.length; i++) {
+                              if (categories[i].key == key) {
+                                category.code = categories[i].code;
+                                category.name = categories[i].name;
+                                category.id = categories[i].id;
+                                category.key = categories[i].key;
+                                category.isParent = categories[i].isParent;
+                              }
+                            }
+                            if (category.isParent == false) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => TaskListScreen(
+                                      projectId: widget.projectId,
+                                      category: category),
+                                ),
+                              );
+                            }
+                          },
+                          theme: _treeViewTheme,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        debugPrint('Close Keyboard');
+                        FocusScope.of(context).unfocus();
+                      },
+                      child: Container(
+                        padding: EdgeInsets.only(top: 20),
+                        alignment: Alignment.center,
+                        child: Text(
+                            _treeViewController.getNode(_selectedNode) == null
+                                ? ''
+                                : _treeViewController
+                                    .getNode(_selectedNode)!
+                                    .label),
+                      ),
+                    )
+                  ],
                 ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  debugPrint('Close Keyboard');
-                  FocusScope.of(context).unfocus();
-                },
-                child: Container(
-                  padding: EdgeInsets.only(top: 20),
-                  alignment: Alignment.center,
-                  child: Text(_treeViewController.getNode(_selectedNode) == null
-                      ? ''
-                      : _treeViewController.getNode(_selectedNode)!.label),
-                ),
-              )
-            ],
-          ),
         ),
       ),
       bottomNavigationBar: SafeArea(
@@ -436,41 +606,15 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
           alignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             CupertinoButton(
-              child: Text('Node'),
+              child: Text('Thêm danh mục con'),
               onPressed: () {
-                setState(() {
-                  _treeViewController = _treeViewController.copyWith(
-                    children: _nodes,
-                  );
-                });
-              },
-            ),
-            CupertinoButton(
-              child: Text('JSON'),
-              onPressed: () {
-                setState(() {
-                  _treeViewController =
-                      _treeViewController.loadJSON(json: US_STATES_JSON);
-                });
-              },
-            ),
-            CupertinoButton(
-              child: Text('Deep'),
-              onPressed: () {
-                String deepKey = 'jh1b';
-                setState(() {
-                  if (deepExpanded == false) {
-                    List<Node> newdata =
-                        _treeViewController.expandToNode(deepKey);
-                    _treeViewController =
-                        _treeViewController.copyWith(children: newdata);
-                    deepExpanded = true;
-                  } else {
-                    _treeViewController =
-                        _treeViewController.withCollapseToNode(deepKey);
-                    deepExpanded = false;
-                  }
-                });
+                // key == id
+                //_treeViewController.selectedNode!.key;
+                showAddChildren();
+                // setState(() {
+                //   _treeViewController =
+                //       _treeViewController.loadJSON(json: US_STATES_JSON);
+                // });
               },
             ),
             CupertinoButton(
@@ -503,16 +647,18 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
                             isDefaultAction: true,
                             onPressed: () {
                               if (editingController.text.isNotEmpty) {
-                                setState(() {
-                                  Node _node =
-                                      _treeViewController.selectedNode!;
-                                  _treeViewController =
-                                      _treeViewController.withUpdateNode(
-                                          _treeViewController.selectedKey!,
-                                          _node.copyWith(
-                                              label: editingController.text));
-                                });
+                                // setState(() {
+                                //   Node _node =
+                                //       _treeViewController.selectedNode!;
+                                //   _treeViewController =
+                                //       _treeViewController.withUpdateNode(
+                                //           _treeViewController.selectedKey!,
+                                //           _node.copyWith(
+                                //               label: editingController.text));
+                                // });
                                 //debugPrint(editingController.text);
+                                editCategory(editingController.text,
+                                    _treeViewController.selectedNode!.key);
                               }
                               Navigator.of(context).pop();
                             },
