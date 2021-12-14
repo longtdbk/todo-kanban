@@ -8,13 +8,11 @@ import 'package:flutter/material.dart';
 // found in the LICENSE file.
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
-import 'package:flutter/services.dart';
 import 'package:kanban_dashboard/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helper/task_type_data.dart';
 import 'task_type_add.dart';
-import 'register.dart';
 import 'package:http/http.dart' as http;
 
 class TaskTypeListScreen extends StatelessWidget {
@@ -133,7 +131,7 @@ class TaskTypeListState extends State<TaskTypeList> {
                   title: Text(
                     tasktypes[index].name,
                   ),
-                  subtitle: Text('Loại CV'),
+                  subtitle: const Text('Loại CV'),
                 ),
               FloatingActionButton(
                 onPressed: () {

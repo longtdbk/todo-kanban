@@ -11,9 +11,6 @@ import 'package:flutter/material.dart';
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-import 'package:kanban_dashboard/category_list.dart';
-import 'package:kanban_dashboard/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helper/categories_data.dart';
@@ -21,12 +18,8 @@ import 'helper/custom_field_data.dart';
 import 'helper/project_data.dart';
 import 'helper/task_data.dart';
 import 'helper/task_status_data.dart';
-import 'project.dart';
-import 'project_add.dart';
-import 'register.dart';
-import 'package:http/http.dart' as http;
 
-import 'task_add.dart';
+import 'package:http/http.dart' as http;
 
 class TaskListScreen extends StatelessWidget {
   final String? projectId;
@@ -101,7 +94,7 @@ class TaskListState extends State<TaskList> {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     var url =
         'http://www.vietinrace.com/srvTD/getProjectID/' + widget.projectId!;
@@ -133,7 +126,7 @@ class TaskListState extends State<TaskList> {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     //var url = 'http://www.vietinrace.com/srvTD/getTasksProject/' + project;
 
@@ -178,7 +171,7 @@ class TaskListState extends State<TaskList> {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     var url =
         'http://www.vietinrace.com/srvTD/getTaskStatus/' + widget.projectId!;
@@ -229,7 +222,7 @@ class TaskListState extends State<TaskList> {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     var url =
         'http://www.vietinrace.com/srvTD/getCustomField/' + widget.projectId!;
@@ -303,10 +296,10 @@ class TaskListState extends State<TaskList> {
     //Navigator.pop(context);
   }
 
-  void _routeToAddProject() {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (BuildContext context) => const ProjectAddScreen()));
-  }
+  // void _routeToAddProject() {
+  //   Navigator.of(context).pushReplacement(MaterialPageRoute(
+  //       builder: (BuildContext context) => const ProjectAddScreen()));
+  // }
 
   int _current = 0;
   final List<String> imgList = [
@@ -354,18 +347,10 @@ class TaskListState extends State<TaskList> {
     imageSliders = [];
     for (int i = 0; i < taskStatuses.length; i++) {
       Widget w = Container(
-          margin: EdgeInsets.all(6.0),
+          margin: const EdgeInsets.all(6.0),
           child: Column(children: [
             _buildHeadline('${taskStatuses[i].name}'),
-            // Flexible(
-            // child:
-            // Container(
-            //     height: 600.0,
-            //     width: MediaQuery.of(context).size.width,
-            //     decoration: BoxDecoration(
-            //       color: Colors.green[50],
-            //     ),
-            //     child: Scrollbar(
+            // const SizedBox(height: 4),
             Container(
               height: MediaQuery.of(context).size.height * 0.45,
               child: ListView(

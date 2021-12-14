@@ -114,8 +114,9 @@ class TaskAddState extends State<TaskAdd> with RestorationMixin {
     });
     if (response.statusCode == 200) {
       var json = jsonDecode(response.body);
-      var status = json['data'][0]['status'];
+      // var status = json['data'][0]['status'];
       var msg = json['data'][0]['msg'];
+      // if (status == true) {}
       showInSnackBar(msg);
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
@@ -129,7 +130,7 @@ class TaskAddState extends State<TaskAdd> with RestorationMixin {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     var url = 'http://www.vietinrace.com/srvTD/getTaskTypesProject/' + project;
     final response = await http.get(Uri.parse(url));
@@ -259,14 +260,14 @@ class TaskAddState extends State<TaskAdd> with RestorationMixin {
                             ),
                             sizedBoxSpace,
                             IconButton(
-                                icon: Icon(Icons.directions_bus),
+                                icon: const Icon(Icons.directions_bus),
                                 onPressed: () {
                                   // print("Pressed");
                                 }),
                             PopupMenuButton<String>(
                               padding: EdgeInsets.zero,
                               onSelected: (value) =>
-                                  showInSnackBar("Bạn chọn là: ${value}"),
+                                  showInSnackBar("Bạn chọn là: $value"),
                               itemBuilder: (context) => menu,
                             ),
                             sizedBoxSpace,

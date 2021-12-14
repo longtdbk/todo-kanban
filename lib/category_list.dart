@@ -9,18 +9,16 @@ import 'package:flutter/material.dart';
 // found in the LICENSE file.
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
-import 'package:flutter/services.dart';
-import 'package:kanban_dashboard/dashboard.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'category_add.dart';
+import 'package:kanban_dashboard/dashboard.dart';
+
 import 'helper/categories_data.dart';
 import 'helper/project_data.dart';
-import 'register.dart';
+
 import 'package:http/http.dart' as http;
 
 import 'task_list.dart';
-import 'util/states.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_treeview/flutter_treeview.dart';
 
@@ -53,7 +51,7 @@ class CategoryListScreen extends StatelessWidget {
 
 class ProjectCategoryScreen extends StatefulWidget {
   final String? projectId;
-  ProjectCategoryScreen({Key? key, this.projectId}) : super(key: key);
+  const ProjectCategoryScreen({Key? key, this.projectId}) : super(key: key);
   //final String? title;
 
   @override
@@ -77,22 +75,24 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
   };
   final Map<ExpanderType, Widget> expansionTypeOptions = {
     ExpanderType.none: Container(),
-    ExpanderType.caret: Icon(
+    ExpanderType.caret: const Icon(
       Icons.arrow_drop_down,
       size: 28,
     ),
-    ExpanderType.arrow: Icon(Icons.arrow_downward),
-    ExpanderType.chevron: Icon(Icons.expand_more),
-    ExpanderType.plusMinus: Icon(Icons.add),
+    ExpanderType.arrow: const Icon(Icons.arrow_downward),
+    ExpanderType.chevron: const Icon(Icons.expand_more),
+    ExpanderType.plusMinus: const Icon(Icons.add),
   };
   final Map<ExpanderModifier, Widget> expansionModifierOptions = {
-    ExpanderModifier.none: ModContainer(ExpanderModifier.none),
-    ExpanderModifier.circleFilled: ModContainer(ExpanderModifier.circleFilled),
+    ExpanderModifier.none: const ModContainer(ExpanderModifier.none),
+    ExpanderModifier.circleFilled:
+        const ModContainer(ExpanderModifier.circleFilled),
     ExpanderModifier.circleOutlined:
-        ModContainer(ExpanderModifier.circleOutlined),
-    ExpanderModifier.squareFilled: ModContainer(ExpanderModifier.squareFilled),
+        const ModContainer(ExpanderModifier.circleOutlined),
+    ExpanderModifier.squareFilled:
+        const ModContainer(ExpanderModifier.squareFilled),
     ExpanderModifier.squareOutlined:
-        ModContainer(ExpanderModifier.squareOutlined),
+        const ModContainer(ExpanderModifier.squareOutlined),
   };
   ExpanderPosition _expanderPosition = ExpanderPosition.start;
   ExpanderType _expanderType = ExpanderType.caret;
@@ -205,10 +205,10 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
             key: dat['id'],
             level: int.parse(dat['level']),
             parent: dat['parent'],
-            isParent: true);
+            isParent: dat['is_parent'] == "true" ? true : false);
         categories.add(category);
       }
-      if (categories.length > 0) {
+      if (categories.isNotEmpty) {
         _selectedNode = categories[0].id;
       }
 
@@ -371,7 +371,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
 
   ListTile _makeExpanderPosition() {
     return ListTile(
-      title: Text('Expander Position'),
+      title: const Text('Expander Position'),
       dense: true,
       trailing: CupertinoSlidingSegmentedControl(
         children: expansionPositionOptions,
@@ -387,7 +387,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
 
   SwitchListTile _makeAllowParentSelect() {
     return SwitchListTile.adaptive(
-      title: Text('Allow Parent Select'),
+      title: const Text('Allow Parent Select'),
       dense: true,
       value: _allowParentSelect,
       onChanged: (v) {
@@ -400,7 +400,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
 
   SwitchListTile _makeSupportParentDoubleTap() {
     return SwitchListTile.adaptive(
-      title: Text('Support Parent Double Tap'),
+      title: const Text('Support Parent Double Tap'),
       dense: true,
       value: _supportParentDoubleTap,
       onChanged: (v) {
@@ -413,7 +413,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
 
   ListTile _makeExpanderType() {
     return ListTile(
-      title: Text('Expander Style'),
+      title: const Text('Expander Style'),
       dense: true,
       trailing: CupertinoSlidingSegmentedControl(
         children: expansionTypeOptions,
@@ -429,7 +429,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
 
   ListTile _makeExpanderModifier() {
     return ListTile(
-      title: Text('Expander Modifier'),
+      title: const Text('Expander Modifier'),
       dense: true,
       trailing: CupertinoSlidingSegmentedControl(
         children: expansionModifierOptions,
@@ -453,7 +453,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
               content: Container(
                 height: 80,
                 alignment: Alignment.center,
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 child: CupertinoTextField(
                   controller: editingController,
                   autofocus: true,
@@ -466,7 +466,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 CupertinoDialogAction(
-                  child: const Text('Update'),
+                  child: const Text('Add'),
                   isDefaultAction: true,
                   onPressed: () {
                     if (editingController.text.isNotEmpty) {
@@ -491,17 +491,19 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
         });
   }
 
+  //tao cay :)
   @override
   Widget build(BuildContext context) {
     TreeViewTheme _treeViewTheme = TreeViewTheme(
       expanderTheme: ExpanderThemeData(
-          type: _expanderType,
-          modifier: _expanderModifier,
-          position: _expanderPosition,
-          // color: Colors.grey.shade800,
-          size: 20,
-          color: Colors.blue),
-      labelStyle: TextStyle(
+        type: _expanderType,
+        modifier: _expanderModifier,
+        position: _expanderPosition,
+        color: Colors.grey.shade800,
+        //color: Colors.blue,
+        size: 30,
+      ),
+      labelStyle: const TextStyle(
         fontSize: 16,
         letterSpacing: 0.3,
       ),
@@ -586,7 +588,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
                         FocusScope.of(context).unfocus();
                       },
                       child: Container(
-                        padding: EdgeInsets.only(top: 20),
+                        padding: const EdgeInsets.only(top: 20),
                         alignment: Alignment.center,
                         child: Text(
                             _treeViewController.getNode(_selectedNode) == null
@@ -606,7 +608,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
           alignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             CupertinoButton(
-              child: Text('Thêm danh mục con'),
+              child: const Text('Thêm danh mục con'),
               onPressed: () {
                 // key == id
                 //_treeViewController.selectedNode!.key;
@@ -618,7 +620,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
               },
             ),
             CupertinoButton(
-              child: Text('Sửa tên'),
+              child: const Text('Sửa tên'),
               onPressed: () {
                 TextEditingController editingController = TextEditingController(
                     text: _treeViewController.selectedNode!.label);
@@ -626,11 +628,11 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
                     context: context,
                     builder: (context) {
                       return CupertinoAlertDialog(
-                        title: Text('Sửa tên Danh Mục'),
+                        title: const Text('Sửa tên Danh Mục'),
                         content: Container(
                           height: 80,
                           alignment: Alignment.center,
-                          padding: EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(10),
                           child: CupertinoTextField(
                             controller: editingController,
                             autofocus: true,
@@ -638,12 +640,12 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
                         ),
                         actions: <Widget>[
                           CupertinoDialogAction(
-                            child: Text('Cancel'),
+                            child: const Text('Cancel'),
                             isDestructiveAction: true,
                             onPressed: () => Navigator.of(context).pop(),
                           ),
                           CupertinoDialogAction(
-                            child: Text('Update'),
+                            child: const Text('Update'),
                             isDefaultAction: true,
                             onPressed: () {
                               if (editingController.text.isNotEmpty) {

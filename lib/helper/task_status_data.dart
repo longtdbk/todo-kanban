@@ -14,10 +14,12 @@ class TaskStatusData {
   String toString() => 'Task status : $name, shortName: $shortName';
 
   @override
-  bool operator ==(Object o) {
-    if (identical(this, o)) return true;
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
 
-    return o is TaskStatusData && o.name == name && o.shortName == shortName;
+    return other is TaskStatusData &&
+        other.name == name &&
+        other.shortName == shortName;
   }
 
   @override

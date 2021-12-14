@@ -1,16 +1,16 @@
-import 'package:fl_chart/fl_chart.dart';
+// import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:kanban_dashboard/task_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'chart.dart';
 import 'project_list.dart';
-import 'category_list.dart';
-import 'indicator.dart';
+// import 'category_list.dart';
+// import 'indicator.dart';
 import 'login.dart';
 import 'register.dart';
 import 'splashscreen.dart';
-import 'task_list.dart';
+// import 'task_list.dart';
 import 'task_type_list.dart';
 // import 'package:graphic/graphic.dart';
 

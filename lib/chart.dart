@@ -2,11 +2,10 @@ import 'dart:convert';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 import 'helper/chart_data.dart';
-import 'helper/task_data.dart';
 import 'indicator.dart';
 
 class ChartScreen extends StatefulWidget {
@@ -43,7 +42,7 @@ class _ChartScreenState extends State {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     var url = 'http://www.vietinrace.com/srvTD/getTasksCategories/' +
         project +

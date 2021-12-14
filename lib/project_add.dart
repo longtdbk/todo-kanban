@@ -85,8 +85,8 @@ class ProjectAddState extends State<ProjectAdd> with RestorationMixin {
       RestorableInt(AutovalidateMode.disabled.index);
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final GlobalKey<FormFieldState<String>> _passwordFieldKey =
-      GlobalKey<FormFieldState<String>>();
+  // final GlobalKey<FormFieldState<String>> _passwordFieldKey =
+  //     GlobalKey<FormFieldState<String>>();
 
   void _handleSubmitted() {
     final form = _formKey.currentState;
@@ -131,7 +131,7 @@ class ProjectAddState extends State<ProjectAdd> with RestorationMixin {
       var msg = json['data'][0]['msg'];
       showInSnackBar(msg);
       if (status == "true") {
-        Timer(Duration(seconds: 2), () => _routeToProjectList());
+        Timer(const Duration(seconds: 2), () => _routeToProjectList());
       }
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");

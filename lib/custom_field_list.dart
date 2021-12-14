@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -11,21 +10,13 @@ import 'package:flutter/material.dart';
 // found in the LICENSE file.
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
-import 'package:flutter/services.dart';
-import 'package:kanban_dashboard/category_list.dart';
-import 'package:kanban_dashboard/dashboard.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helper/categories_data.dart';
 import 'helper/custom_field_data.dart';
 import 'helper/project_data.dart';
 import 'helper/task_data.dart';
-import 'helper/task_status_data.dart';
-import 'project.dart';
-import 'project_add.dart';
-import 'package:http/http.dart' as http;
 
-import 'task_add.dart';
+import 'package:http/http.dart' as http;
 
 // class TaskListScreen extends StatelessWidget {
 //   final ProjectData? project;
@@ -97,7 +88,7 @@ class CustomFieldListState extends State<CustomFieldList> {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     var url = 'http://www.vietinrace.com/srvTD/getCustomField/' + project;
     final response = await http.get(Uri.parse(url));
@@ -230,11 +221,11 @@ class CustomFieldListState extends State<CustomFieldList> {
         context: context,
         builder: (context) {
           return CupertinoAlertDialog(
-              title: Text('Thêm giá trị'),
+              title: const Text('Thêm giá trị'),
               content: Container(
                 height: 80,
                 alignment: Alignment.center,
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 child: CupertinoTextField(
                   controller: editingController,
                   autofocus: true,
@@ -242,12 +233,12 @@ class CustomFieldListState extends State<CustomFieldList> {
               ),
               actions: <Widget>[
                 CupertinoDialogAction(
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                   isDestructiveAction: true,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 CupertinoDialogAction(
-                    child: Text('Update'),
+                    child: const Text('Update'),
                     isDefaultAction: true,
                     onPressed: () {
                       if (editingController.text.isNotEmpty) {
@@ -267,11 +258,11 @@ class CustomFieldListState extends State<CustomFieldList> {
         context: context,
         builder: (context) {
           return CupertinoAlertDialog(
-              title: Text('Sửa giá trị'),
+              title: const Text('Sửa giá trị'),
               content: Container(
                 height: 80,
                 alignment: Alignment.center,
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 child: CupertinoTextField(
                   controller: editingController,
                   autofocus: true,
@@ -279,12 +270,12 @@ class CustomFieldListState extends State<CustomFieldList> {
               ),
               actions: <Widget>[
                 CupertinoDialogAction(
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                   isDestructiveAction: true,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 CupertinoDialogAction(
-                    child: Text('Update'),
+                    child: const Text('Update'),
                     isDefaultAction: true,
                     onPressed: () {
                       if (editingController.text.isNotEmpty) {
@@ -432,7 +423,7 @@ class CustomFieldListState extends State<CustomFieldList> {
     );
   }
 
-  int _current = 0;
+  // int _current = 0;
 
   // List<Widget> lists = [];
 
@@ -462,8 +453,8 @@ class CustomFieldListState extends State<CustomFieldList> {
               leading: ExcludeSemantics(
                   // child: CircleAvatar(child: Text('${i + 1}')),
                   child: Container(
-                      padding: EdgeInsets.only(left: 20),
-                      child: Icon(Icons.circle_outlined))),
+                      padding: const EdgeInsets.only(left: 20),
+                      child: const Icon(Icons.circle_outlined))),
               //contentPadding: const EdgeInsets.symmetric(horizontal: 8),
               title: Text(
                 data[i.toString()],

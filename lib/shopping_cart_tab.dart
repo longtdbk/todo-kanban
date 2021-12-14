@@ -238,6 +238,7 @@ class _ShoppingCartTabState extends State<ShoppingCartTab> {
 
 class ShoppingCartItem extends StatelessWidget {
   const ShoppingCartItem({
+    Key? key,
     required this.index,
     required this.product,
     required this.lastItem,

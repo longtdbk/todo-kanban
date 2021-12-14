@@ -8,15 +8,13 @@ import 'package:flutter/material.dart';
 // found in the LICENSE file.
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
-import 'package:flutter/services.dart';
-import 'package:kanban_dashboard/category_list.dart';
+
 import 'package:kanban_dashboard/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helper/project_data.dart';
 import 'project.dart';
 import 'project_add.dart';
-import 'register.dart';
 import 'package:http/http.dart' as http;
 
 class ProjectListScreen extends StatelessWidget {

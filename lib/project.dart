@@ -8,16 +8,12 @@ import 'package:flutter/material.dart';
 // found in the LICENSE file.
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
-import 'package:flutter/services.dart';
-import 'package:kanban_dashboard/dashboard.dart';
-import 'package:kanban_dashboard/project_list.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'category_list.dart';
 import 'custom_field_list.dart';
 import 'helper/categories_data.dart';
 import 'helper/project_data.dart';
-import 'project_add.dart';
+
 import 'package:http/http.dart' as http;
 
 import 'task_status.dart';
@@ -65,7 +61,7 @@ class ProjectSingleState extends State<ProjectSingle> {
   int _selectedIndex = 0;
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
-  List<Widget> _listBody = [];
+  final List<Widget> _listBody = [];
 
   void createTabItem() {
     _listBody.add(ProjectCategoryScreen(projectId: widget.project!.id));
@@ -94,7 +90,7 @@ class ProjectSingleState extends State<ProjectSingle> {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     var url = 'http://www.vietinrace.com/srvTD/getProject/' + code;
     final response = await http.get(Uri.parse(url));
@@ -123,10 +119,10 @@ class ProjectSingleState extends State<ProjectSingle> {
     categories.add(category);
   }
 
-  void _routeToAddProject() {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (BuildContext context) => const ProjectAddScreen()));
-  }
+  // void _routeToAddProject() {
+  //   Navigator.of(context).pushReplacement(MaterialPageRoute(
+  //       builder: (BuildContext context) => const ProjectAddScreen()));
+  // }
 
   void _onItemTapped(int index) {
     setState(() {

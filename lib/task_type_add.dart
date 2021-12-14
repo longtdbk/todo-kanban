@@ -9,12 +9,10 @@ import 'package:flutter/material.dart';
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/services.dart';
-import 'package:kanban_dashboard/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helper/task_type_data.dart';
 import 'task_type_list.dart';
-import 'register.dart';
 import 'package:http/http.dart' as http;
 // import 'package:http_parser/http_parser.dart' as http;
 
@@ -51,7 +49,7 @@ class TaskTypeAdd extends StatefulWidget {
 // cái này mục tiêu là hiện hay ẩn --> tạo thành 1 file mới thôi (helper)
 
 class TaskTypeAddState extends State<TaskTypeAdd> with RestorationMixin {
-  TaskTypeData TaskType = TaskTypeData();
+  TaskTypeData taskType = TaskTypeData();
 
   FocusNode? _name;
   bool isLoading = false;
@@ -87,8 +85,8 @@ class TaskTypeAddState extends State<TaskTypeAdd> with RestorationMixin {
       RestorableInt(AutovalidateMode.disabled.index);
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final GlobalKey<FormFieldState<String>> _passwordFieldKey =
-      GlobalKey<FormFieldState<String>>();
+  // final GlobalKey<FormFieldState<String>> _passwordFieldKey =
+  //     GlobalKey<FormFieldState<String>>();
 
   void _handleSubmitted() {
     final form = _formKey.currentState;
@@ -119,7 +117,7 @@ class TaskTypeAddState extends State<TaskTypeAdd> with RestorationMixin {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         encoding: Encoding.getByName('utf-8'),
-        body: {'name': TaskType.name, 'email': prefs.getString("email")!});
+        body: {'name': taskType.name, 'email': prefs.getString("email")!});
 
     setState(() {
       isLoading = false;
@@ -133,7 +131,7 @@ class TaskTypeAddState extends State<TaskTypeAdd> with RestorationMixin {
       var msg = json['data'][0]['msg'];
       showInSnackBar(msg);
       if (status == "true") {
-        Timer(Duration(seconds: 2), () => _routeToTaskTypeList());
+        Timer(const Duration(seconds: 2), () => _routeToTaskTypeList());
       }
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
@@ -145,13 +143,13 @@ class TaskTypeAddState extends State<TaskTypeAdd> with RestorationMixin {
         builder: (BuildContext context) => const TaskTypeListScreen()));
   }
 
-  String? _validatePassword(String? value) {
-    final passwordField = _passwordFieldKey.currentState;
-    if (passwordField!.value == null || passwordField.value!.isEmpty) {
-      return 'Chưa nhập Mật khẩu ';
-    }
-    return null;
-  }
+  // String? _validatePassword(String? value) {
+  //   final passwordField = _passwordFieldKey.currentState;
+  //   if (passwordField!.value == null || passwordField.value!.isEmpty) {
+  //     return 'Chưa nhập Mật khẩu ';
+  //   }
+  //   return null;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +178,7 @@ class TaskTypeAddState extends State<TaskTypeAdd> with RestorationMixin {
                 ),
                 keyboardType: TextInputType.name,
                 onSaved: (value) {
-                  TaskType.name = value!;
+                  taskType.name = value!;
                   //_password!.requestFocus();
                 },
               ),

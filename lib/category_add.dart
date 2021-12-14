@@ -49,7 +49,7 @@ class CategoryAdd extends StatefulWidget {
 // cái này mục tiêu là hiện hay ẩn --> tạo thành 1 file mới thôi (helper)
 
 class CategoryAddState extends State<CategoryAdd> with RestorationMixin {
-  CategoryData Category = CategoryData();
+  CategoryData category = CategoryData();
 
   FocusNode? _name;
   bool isLoading = false;
@@ -85,8 +85,8 @@ class CategoryAddState extends State<CategoryAdd> with RestorationMixin {
       RestorableInt(AutovalidateMode.disabled.index);
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final GlobalKey<FormFieldState<String>> _passwordFieldKey =
-      GlobalKey<FormFieldState<String>>();
+  // final GlobalKey<FormFieldState<String>> _passwordFieldKey =
+  //     GlobalKey<FormFieldState<String>>();
 
   void _handleSubmitted() {
     final form = _formKey.currentState;
@@ -117,7 +117,7 @@ class CategoryAddState extends State<CategoryAdd> with RestorationMixin {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         encoding: Encoding.getByName('utf-8'),
-        body: {'name': Category.name, 'email': prefs.getString("email")!});
+        body: {'name': category.name, 'email': prefs.getString("email")!});
 
     setState(() {
       isLoading = false;
@@ -131,7 +131,7 @@ class CategoryAddState extends State<CategoryAdd> with RestorationMixin {
       var msg = json['data'][0]['msg'];
       showInSnackBar(msg);
       if (status == "true") {
-        Timer(Duration(seconds: 2), () => _routeToCategoryList());
+        Timer(const Duration(seconds: 2), () => _routeToCategoryList());
       }
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
@@ -143,13 +143,13 @@ class CategoryAddState extends State<CategoryAdd> with RestorationMixin {
         builder: (BuildContext context) => const CategoryListScreen()));
   }
 
-  String? _validatePassword(String? value) {
-    final passwordField = _passwordFieldKey.currentState;
-    if (passwordField!.value == null || passwordField.value!.isEmpty) {
-      return 'Chưa nhập Mật khẩu ';
-    }
-    return null;
-  }
+  // String? _validatePassword(String? value) {
+  //   final passwordField = _passwordFieldKey.currentState;
+  //   if (passwordField!.value == null || passwordField.value!.isEmpty) {
+  //     return 'Chưa nhập Mật khẩu ';
+  //   }
+  //   return null;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +178,7 @@ class CategoryAddState extends State<CategoryAdd> with RestorationMixin {
                 ),
                 keyboardType: TextInputType.name,
                 onSaved: (value) {
-                  Category.name = value!;
+                  category.name = value!;
                   //_password!.requestFocus();
                 },
               ),

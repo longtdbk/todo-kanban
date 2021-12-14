@@ -68,12 +68,12 @@ class Language {
       'Language englishName: $englishName, nativeName: $nativeName';
 
   @override
-  bool operator ==(Object o) {
-    if (identical(this, o)) return true;
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
 
-    return o is Language &&
-        o.englishName == englishName &&
-        o.nativeName == nativeName;
+    return other is Language &&
+        other.englishName == englishName &&
+        other.nativeName == nativeName;
   }
 
   @override

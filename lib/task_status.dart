@@ -10,19 +10,15 @@ import 'package:flutter/material.dart';
 // found in the LICENSE file.
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
-import 'package:flutter/services.dart';
+
 import 'package:implicitly_animated_reorderable_list/implicitly_animated_reorderable_list.dart';
 import 'package:implicitly_animated_reorderable_list/transitions.dart';
 
-import 'package:kanban_dashboard/dashboard.dart';
 import 'package:kanban_dashboard/project_list.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'helper/categories_data.dart';
 import 'helper/project_data.dart';
 import 'helper/task_status_data.dart';
-import 'project_add.dart';
-import 'register.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:flutter_slidable/flutter_slidable.dart';
 // import 'util/languages.dart';
@@ -93,7 +89,7 @@ class TaskStatusState extends State<TaskStatus> {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     var url =
         'http://www.vietinrace.com/srvTD/getTaskStatus/' + widget.projectId!;
@@ -125,7 +121,7 @@ class TaskStatusState extends State<TaskStatus> {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     var url =
         'http://www.vietinrace.com/srvTD/getProjectId/' + widget.projectId!;
@@ -170,7 +166,7 @@ class TaskStatusState extends State<TaskStatus> {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     final response = await http.post(
         Uri.parse('http://www.vietinrace.com/srvTD/addTaskStatusPost/'),
@@ -211,7 +207,7 @@ class TaskStatusState extends State<TaskStatus> {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     final response = await http.post(
         Uri.parse('http://www.vietinrace.com/srvTD/editTaskStatusPost/'),
@@ -257,7 +253,7 @@ class TaskStatusState extends State<TaskStatus> {
       isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
 
     String value = "{";
     for (int i = 0; i < selectedStatus.length; i++) {
@@ -297,10 +293,10 @@ class TaskStatusState extends State<TaskStatus> {
   //   categories.add(category);
   // }
 
-  void _routeToAddProject() {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (BuildContext context) => const ProjectAddScreen()));
-  }
+  // void _routeToAddProject() {
+  //   Navigator.of(context).pushReplacement(MaterialPageRoute(
+  //       builder: (BuildContext context) => const ProjectAddScreen()));
+  // }
 
   static const double _horizontalHeight = 96;
   static const List<String> options = [
@@ -544,7 +540,7 @@ class TaskStatusState extends State<TaskStatus> {
       SlidableAction(
         //closeOnTap: true,
         autoClose: true,
-        backgroundColor: Color(0xFF21B7CA),
+        backgroundColor: const Color(0xFF21B7CA),
         foregroundColor: Colors.white,
         //onPressed: () => setState(() => selectedLanguages.remove(lang)),
         onPressed: (BuildContext context) =>
@@ -558,7 +554,7 @@ class TaskStatusState extends State<TaskStatus> {
       SlidableAction(
         //closeOnTap: true,
         autoClose: true,
-        backgroundColor: Color(0xFF7BC043),
+        backgroundColor: const Color(0xFF7BC043),
         foregroundColor: Colors.white,
         //onPressed: () => setState(() => selectedLanguages.remove(lang)),
         onPressed: (BuildContext context) => {
@@ -571,7 +567,7 @@ class TaskStatusState extends State<TaskStatus> {
       SlidableAction(
         //closeOnTap: true,
         autoClose: true,
-        backgroundColor: Color(0xFF0392CF),
+        backgroundColor: const Color(0xFF0392CF),
         foregroundColor: Colors.white,
         //onPressed: () => setState(() => selectedLanguages.remove(lang)),
         onPressed: (BuildContext context) =>
@@ -686,11 +682,11 @@ class TaskStatusState extends State<TaskStatus> {
         context: context,
         builder: (context) {
           return CupertinoAlertDialog(
-              title: Text('Thêm trạng thái công việc'),
+              title: const Text('Thêm trạng thái công việc'),
               content: Container(
                 height: 80,
                 alignment: Alignment.center,
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 child: CupertinoTextField(
                   controller: editingController,
                   autofocus: true,
@@ -698,12 +694,12 @@ class TaskStatusState extends State<TaskStatus> {
               ),
               actions: <Widget>[
                 CupertinoDialogAction(
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                   isDestructiveAction: true,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 CupertinoDialogAction(
-                    child: Text('Add'),
+                    child: const Text('Add'),
                     isDefaultAction: true,
                     onPressed: () {
                       if (editingController.text.isNotEmpty) {
@@ -723,11 +719,11 @@ class TaskStatusState extends State<TaskStatus> {
         context: context,
         builder: (context) {
           return CupertinoAlertDialog(
-              title: Text('Sửa tên trạng thái'),
+              title: const Text('Sửa tên trạng thái'),
               content: Container(
                 height: 80,
                 alignment: Alignment.center,
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 child: CupertinoTextField(
                   controller: editingController,
                   autofocus: true,
@@ -735,17 +731,18 @@ class TaskStatusState extends State<TaskStatus> {
               ),
               actions: <Widget>[
                 CupertinoDialogAction(
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                   isDestructiveAction: true,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 CupertinoDialogAction(
-                    child: Text('Update'),
+                    child: const Text('Update'),
                     isDefaultAction: true,
                     onPressed: () {
                       if (editingController.text.isNotEmpty) {
                         // setState(() {});
-                        editTaskStatus(editingController.text, taskStatusData.id);
+                        editTaskStatus(
+                            editingController.text, taskStatusData.id);
                       }
                       Navigator.of(context).pop();
                     }),

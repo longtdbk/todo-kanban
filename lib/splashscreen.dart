@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:kanban_dashboard/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,11 +29,15 @@ class _SplashScreenState extends State<SplashScreen> {
   void _loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getString('email') != null) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (BuildContext context) => const DashboardPage()));
+      Timer(
+          const Duration(seconds: 3),
+          () => Navigator.of(context).pushReplacement(MaterialPageRoute(
+              builder: (BuildContext context) => const DashboardPage())));
     } else {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (BuildContext context) => const LoginScreen()));
+      Timer(
+          const Duration(seconds: 3),
+          () => Navigator.of(context).pushReplacement(MaterialPageRoute(
+              builder: (BuildContext context) => const LoginScreen())));
     }
   }
 
@@ -41,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.white,
       body: Center(
         child: Column(children: [
-          Image.asset('assets/images/splashscreen.png'),
+          Image.asset('assets/images/todo_kanban.png'),
           const CircularProgressIndicator(),
         ]),
       ),

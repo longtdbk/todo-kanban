@@ -66,8 +66,9 @@ List<Triplet<int, int, bool>> getQueryHighlights(String text, String query) {
   final t = text.toLowerCase();
   final q = query.toLowerCase();
 
-  if (t.isEmpty || q.isEmpty || !t.contains(q))
+  if (t.isEmpty || q.isEmpty || !t.contains(q)) {
     return [Triplet(0, t.length, false)];
+  }
 
   List<Triplet<int, int, bool>> idxs = [];
 
@@ -144,11 +145,11 @@ class Triplet<A, B, C> {
   String toString() => 'Triple first: $first, second: $second, third: $third';
 
   @override
-  bool operator ==(Object o) {
-    return o is Triplet &&
-        o.first == first &&
-        o.second == second &&
-        o.third == third;
+  bool operator ==(Object other) {
+    return other is Triplet &&
+        other.first == first &&
+        other.second == second &&
+        other.third == third;
   }
 
   @override
