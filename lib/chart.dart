@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -9,24 +10,35 @@ import 'helper/chart_data.dart';
 import 'indicator.dart';
 
 class ChartScreen extends StatefulWidget {
-  const ChartScreen({Key? key}) : super(key: key);
+  final String? projectId;
+  final String? title;
+  final String? categoryId;
+  const ChartScreen({Key? key, this.projectId, this.categoryId, this.title})
+      : super(key: key);
 
   @override
   // _DashboardPageState2 createState() => _DashboardPageState2();
   _ChartScreenState createState() => _ChartScreenState();
 }
 
-class _ChartScreenState extends State {
-  int touchedIndex = -1;
-
+class _ChartScreenState extends State<ChartScreen> {
+  int touchedIndex = -1; // giá trị để làm việc đây :)
+  String categoryChooseName = "";
+  String categoryChooseId = "";
   var chartDatas = [];
+  List<Color> chartColors = [];
 
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    getAllCategoriesProject('61ab4b5084a5fa00241602dc', 2);
+
+    if (widget.categoryId!.isEmpty) {
+      getAllCategoriesProject(widget.projectId!, 0);
+    } else {
+      getAllCategoriesChild(widget.projectId!, widget.categoryId!);
+    }
   }
 
   void showInSnackBar(String value) {
@@ -44,7 +56,7 @@ class _ChartScreenState extends State {
 
     // final prefs = await SharedPreferences.getInstance();
 
-    var url = 'http://www.vietinrace.com/srvTD/getTasksCategories/' +
+    var url = 'http://www.vietinrace.com/srvTD/getCalculateTasksCategories/' +
         project +
         "/" +
         level.toString();
@@ -61,6 +73,7 @@ class _ChartScreenState extends State {
       for (var dat in data) {
         ChartData chartData = ChartData();
         chartData.name = dat['name'];
+        chartData.id = dat['id'];
         chartData.total = int.parse(dat['total']);
         chartData.profit = int.parse(dat['profit']);
         totalProfit += chartData.profit;
@@ -71,69 +84,231 @@ class _ChartScreenState extends State {
         chartDatas[i].percentTotal = chartDatas[i].total / totalTasks;
         chartDatas[i].percentProfit = chartDatas[i].profit / totalProfit;
       }
+      chartColors = getColors(chartDatas.length);
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
+  }
+
+  Future<void> getAllCategoriesChild(
+      String project, String parentCategory) async {
+    chartDatas = [];
+    setState(() {
+      isLoading = true;
+    });
+
+    // final prefs = await SharedPreferences.getInstance();
+
+    var url =
+        'http://www.vietinrace.com/srvTD/getCalculateTasksCategoriesChild/' +
+            project +
+            "/" +
+            parentCategory;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      int totalProfit = 0;
+      int totalTasks = 0;
+      for (var dat in data) {
+        ChartData chartData = ChartData();
+        chartData.name = dat['name'];
+        chartData.id = dat['id'];
+        chartData.total = int.parse(dat['total']);
+        chartData.profit = int.parse(dat['profit']);
+        totalProfit += chartData.profit;
+        totalTasks += chartData.total;
+        chartDatas.add(chartData);
+      }
+      for (int i = 0; i < chartDatas.length; i++) {
+        chartDatas[i].percentTotal = chartDatas[i].total / totalTasks;
+        chartDatas[i].percentProfit = chartDatas[i].profit / totalProfit;
+      }
+      chartColors = getColors(chartDatas.length);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  double hue2rgb(double p, double q, double t) {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  }
+
+  List<int> hslToRgb(double h, double s, double l) {
+    h /= 360;
+    s /= 100;
+    l /= 100;
+    double r, g, b;
+
+    if (s == 0) {
+      r = g = b = l; // achromatic
+    } else {
+      double q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      var p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1 / 3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1 / 3);
+    }
+
+    return [(r * 255).round(), (g * 255).round(), (b * 255).round()];
+  }
+
+  String toHex(int x) {
+    String hex = (x * 255).round().toRadixString(16);
+    return hex.length == 1 ? '0' + hex : hex;
+  }
+
+  List<Color> getColors(int num) {
+    int initialColor = Random().nextInt(360);
+    int increment = 360 ~/ num;
+    List<Color> hsls = [];
+    // Color color = const Color(0x00000119); //AARRGGBB
+    for (int i = 0; i < num; i++) {
+      double number = double.parse(
+          (initialColor + (i * increment) % 360).round().toString());
+      List<int> rgbs = hslToRgb(number, 100, 50);
+      String sColorNumber =
+          '0xff' + toHex(rgbs[0]) + toHex(rgbs[1]) + toHex(rgbs[2]);
+      hsls.add(Color(int.parse(sColorNumber)));
+      //Color(0xff)
+      // hsls.add(Color(number));
+    }
+    return hsls;
+  }
+
+  Color chooseColor(int i) {
+    Color color = const Color(0xff0293ee);
+    switch (i) {
+      case 0:
+        color = const Color(0xff0293ee);
+        break;
+      case 1:
+        color = const Color(0xfff8b250);
+        break;
+      case 2:
+        color = const Color(0xff845bef);
+        break;
+      case 3:
+        color = const Color(0xff13d38e);
+        break;
+      case 4:
+        color = const Color(0xffeb4034);
+        break;
+      case 5:
+        color = const Color(0xffbaeb34);
+        break;
+      case 6:
+        color = const Color(0xffdc34eb);
+        break;
+      default:
+        color = const Color(0xff34c3eb);
+    }
+    return color;
+  }
+
+  Widget _buildChart(int option) {
+    return Card(
+      color: Colors.white,
+      child: Row(
+        children: <Widget>[
+          const SizedBox(
+            height: 18,
+          ),
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: PieChart(
+                PieChartData(
+                    pieTouchData: PieTouchData(
+                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                      setState(() {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse == null ||
+                            pieTouchResponse.touchedSection == null) {
+                          touchedIndex = -1;
+                          return;
+                        }
+                        touchedIndex = pieTouchResponse
+                            .touchedSection!.touchedSectionIndex;
+                        if (touchedIndex >= 0) {
+                          categoryChooseName = chartDatas[touchedIndex].name;
+                          categoryChooseId = chartDatas[touchedIndex].id;
+                        }
+                      });
+                    }),
+                    borderData: FlBorderData(
+                      show: false,
+                    ),
+                    sectionsSpace: 0,
+                    centerSpaceRadius: 40,
+                    sections: showingSectionsChart(option)),
+              ),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            // cho vào vòng lặp được này
+            children: showingIndicators(),
+          ),
+          const SizedBox(
+            width: 28,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _goToChildren() {
+    //showInSnackBar(categoryChooseId);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChartScreen(
+            projectId: widget.projectId!,
+            categoryId: categoryChooseId,
+            title: categoryChooseName),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Kanban',
+        title: Text(
+          widget.title!,
         ),
       ),
-      body: AspectRatio(
-        aspectRatio: 1.3,
-        child: Card(
-          color: Colors.white,
-          child: Row(
-            children: <Widget>[
-              const SizedBox(
-                height: 18,
-              ),
-              Expanded(
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: PieChart(
-                    PieChartData(
-                        pieTouchData: PieTouchData(touchCallback:
-                            (FlTouchEvent event, pieTouchResponse) {
-                          setState(() {
-                            if (!event.isInterestedForInteractions ||
-                                pieTouchResponse == null ||
-                                pieTouchResponse.touchedSection == null) {
-                              touchedIndex = -1;
-                              return;
-                            }
-                            touchedIndex = pieTouchResponse
-                                .touchedSection!.touchedSectionIndex;
-                          });
-                        }),
-                        borderData: FlBorderData(
-                          show: false,
-                        ),
-                        sectionsSpace: 0,
-                        centerSpaceRadius: 40,
-                        sections: showingSectionsChart()),
-                  ),
-                ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                // cho vào vòng lặp được này
-                children: showingIndicators(),
-              ),
-              const SizedBox(
-                width: 28,
-              ),
-            ],
-          ),
-        ),
-      ),
+      // resizeToAvoidBottomInset: false,
+      body: SingleChildScrollView(
+          //aspectRatio: 1.3,
+          child: Column(children: [
+        const SizedBox(height: 10),
+        const Text('Lợi Ích (Triệu Đồng)'),
+        // SizedBox(height: 10),
+        _buildChart(0),
+        const SizedBox(height: 10),
+        const Text('Số Công Việc'),
+        _buildChart(1),
+        categoryChooseName != "" ? Text(categoryChooseName) : Text(''),
+        categoryChooseId != ""
+            ? ElevatedButton(
+                onPressed: _goToChildren,
+                child: const Text('Xem danh mục Con'),
+              )
+            : const Text(''),
+      ])),
     );
   }
 
@@ -153,39 +328,27 @@ class _ChartScreenState extends State {
     return indicators;
   }
 
-  Color chooseColor(int i) {
-    Color color = const Color(0xff0293ee);
-    switch (i) {
-      case 0:
-        color = const Color(0xff0293ee);
-        break;
-      case 1:
-        color = const Color(0xfff8b250);
-        break;
-      case 2:
-        color = const Color(0xff845bef);
-        break;
-      case 3:
-        color = const Color(0xff13d38e);
-        break;
-      default:
-        color = const Color(0xff0293ee);
-    }
-    return color;
-  }
-
-  List<PieChartSectionData> showingSectionsChart() {
+  List<PieChartSectionData> showingSectionsChart(int option) {
     List<PieChartSectionData> listPies = [];
+    double valuePercent = 0;
+    String nameItem = "";
 
     for (int i = 0; i < chartDatas.length; i++) {
+      if (option == 0) {
+        valuePercent = chartDatas[i].percentProfit;
+        nameItem = chartDatas[i].profit.toString();
+      } else {
+        valuePercent = chartDatas[i].percentTotal;
+        nameItem = chartDatas[i].total.toString();
+      }
       final isTouched = i == touchedIndex;
       final fontSize = isTouched ? 25.0 : 16.0;
       final radius = isTouched ? 60.0 : 50.0;
       Color color = chooseColor(i);
       PieChartSectionData sectionData = PieChartSectionData(
         color: color,
-        value: chartDatas[i].percentProfit,
-        title: chartDatas[i].profit.toString(),
+        value: valuePercent,
+        title: nameItem,
         radius: radius,
         titleStyle: TextStyle(
             fontSize: fontSize,
@@ -195,61 +358,5 @@ class _ChartScreenState extends State {
       listPies.add(sectionData);
     }
     return listPies;
-  }
-
-  List<PieChartSectionData> showingSections() {
-    return List.generate(4, (i) {
-      final isTouched = i == touchedIndex;
-      final fontSize = isTouched ? 25.0 : 16.0;
-      final radius = isTouched ? 60.0 : 50.0;
-      switch (i) {
-        case 0:
-          return PieChartSectionData(
-            color: const Color(0xff0293ee),
-            value: 40,
-            title: '40%',
-            radius: radius,
-            titleStyle: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xffffffff)),
-          );
-        case 1:
-          return PieChartSectionData(
-            color: const Color(0xfff8b250),
-            value: 30,
-            title: '30%',
-            radius: radius,
-            titleStyle: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xffffffff)),
-          );
-        case 2:
-          return PieChartSectionData(
-            color: const Color(0xff845bef),
-            value: 15,
-            title: '15%',
-            radius: radius,
-            titleStyle: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xffffffff)),
-          );
-        case 3:
-          return PieChartSectionData(
-            color: const Color(0xff13d38e),
-            value: 15,
-            title: '15%',
-            radius: radius,
-            titleStyle: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xffffffff)),
-          );
-        default:
-          throw Error();
-      }
-    });
   }
 }

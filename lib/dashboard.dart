@@ -30,7 +30,10 @@ class Dashboard extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/dashboard': (context) => const DashboardPage(),
-        '/kanban': (context) => const ChartScreen(),
+        '/kanban': (context) => const ChartScreen(
+            title: 'Thống kê Chung',
+            categoryId: '',
+            projectId: '61ab4b5084a5fa00241602dc'),
         '/list_project': (context) => const ProjectListScreen(),
         //'/list_category': (context) => const CategoryListScreen(),
         '/list_task_type': (context) => const TaskTypeListScreen(),

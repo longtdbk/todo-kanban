@@ -47,7 +47,8 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.white,
       body: Center(
         child: Column(children: [
-          Image.asset('assets/images/todo_kanban.png'),
+          SizedBox(height: MediaQuery.of(context).size.height / 2),
+          Image.asset('assets/images/todo_kanban.png', width: 400, height: 400),
           const CircularProgressIndicator(),
         ]),
       ),
