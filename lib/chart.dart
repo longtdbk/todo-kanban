@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
 
@@ -6,7 +7,9 @@ import 'package:flutter/material.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
+import 'helper/categories_data.dart';
 import 'helper/chart_data.dart';
+import 'helper/custom_field_data.dart';
 import 'indicator.dart';
 
 class ChartScreen extends StatefulWidget {
@@ -23,9 +26,18 @@ class ChartScreen extends StatefulWidget {
 
 class _ChartScreenState extends State<ChartScreen> {
   int touchedIndex = -1; // giá trị để làm việc đây :)
-  String categoryChooseName = "";
+  String categoryChooseName = ""; // category goc :)
   String categoryChooseId = "";
   var chartDatas = [];
+
+  // for customField
+  var fields = [];
+  HashMap<String, List<ChartData>> mapDatasCustomField =
+      HashMap<String, List<ChartData>>();
+  HashMap<String, int> mapTouchedIndexCustom = HashMap<String, int>();
+  HashMap<String, String> mapIndexCustomName = HashMap<String, String>();
+  HashMap<String, CategoriesData> mapCategories =
+      HashMap<String, CategoriesData>();
   List<Color> chartColors = [];
 
   bool isLoading = false;
@@ -34,11 +46,7 @@ class _ChartScreenState extends State<ChartScreen> {
   void initState() {
     super.initState();
 
-    if (widget.categoryId!.isEmpty) {
-      getAllCategoriesProject(widget.projectId!, 0);
-    } else {
-      getAllCategoriesChild(widget.projectId!, widget.categoryId!);
-    }
+    getAllCategories();
   }
 
   void showInSnackBar(String value) {
@@ -46,6 +54,43 @@ class _ChartScreenState extends State<ChartScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(value),
     ));
+  }
+
+  Future<void> getAllCategories() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    var url = 'http://www.vietinrace.com/srvTD/getCategoriesProject/' +
+        widget.projectId!;
+    //prefs.getString('email')!;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        CategoriesData category = CategoriesData(
+            name: dat['name'],
+            id: dat['id'],
+            code: dat['code'],
+            key: dat['id'],
+            level: int.parse(dat['level']),
+            parent: dat['parent'],
+            isParent: dat['is_parent'] == "true" ? true : false);
+        mapCategories[dat['id']] = category;
+      }
+      if (widget.categoryId!.isEmpty) {
+        getAllCategoriesProject(widget.projectId!, 0);
+      } else {
+        getAllCategoriesChild(widget.projectId!, widget.categoryId!);
+      }
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
   }
 
   Future<void> getAllCategoriesProject(String project, int level) async {
@@ -85,6 +130,8 @@ class _ChartScreenState extends State<ChartScreen> {
         chartDatas[i].percentProfit = chartDatas[i].profit / totalProfit;
       }
       chartColors = getColors(chartDatas.length);
+
+      getCustomFieldsProject(project, "");
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
@@ -129,6 +176,109 @@ class _ChartScreenState extends State<ChartScreen> {
         chartDatas[i].percentProfit = chartDatas[i].profit / totalProfit;
       }
       chartColors = getColors(chartDatas.length);
+      getCustomFieldsProject(project, parentCategory);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  Future<void> getCustomFieldsProject(
+      String project, String parentCategory) async {
+    fields = [];
+    setState(() {
+      isLoading = true;
+    });
+
+    // final prefs = await SharedPreferences.getInstance();
+
+    var url = 'http://www.vietinrace.com/srvTD/getCustomField/' + project;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        CustomFieldData field = CustomFieldData();
+        field.name = dat['name'];
+        field.code = dat['name'];
+        field.id = dat['id'];
+        field.value = dat['value'];
+        fields.add(field);
+        mapDatasCustomField[field.id] = [];
+        mapIndexCustomName[field.id] = "";
+        mapTouchedIndexCustom[field.id] = -1;
+      }
+      getCalculateCustomFieldChild(project, parentCategory, 0);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+// cái này cũng 2 phần : tasks, profits ??? -->
+// hiển thị 1 màn hình thôi :), chuẩn luôn.
+// KPI, KPI2
+// KPI --> 2 biểu đồ
+// KPI2 --> 2 biểu đồ
+  /// .... --> ok đấy (đầy đủ)
+
+  Future<void> getCalculateCustomFieldChild(
+      String project, String parentCategory, int fieldIndex) async {
+    List<ChartData> chartDatasCustomField = [];
+    String customField = fields[fieldIndex].id;
+    setState(() {
+      isLoading = true;
+    });
+
+    // final prefs = await SharedPreferences.getInstance();
+    var url = "";
+    if (parentCategory != "") {
+      url =
+          'http://www.vietinrace.com/srvTD/getCalculateTasksCategoryCustomField/' +
+              project +
+              "/" +
+              parentCategory +
+              "/" +
+              customField;
+    } else {
+      url = 'http://www.vietinrace.com/srvTD/getCalculateTasksCustomField/' +
+          project +
+          "/" +
+          customField;
+    }
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      int totalProfit = 0;
+      int totalTasks = 0;
+      for (var dat in data) {
+        ChartData chartData = ChartData();
+        chartData.name = dat['name'];
+        chartData.id = dat['id'];
+        chartData.total = int.parse(dat['total']);
+        chartData.profit = int.parse(dat['profit']);
+        totalProfit += chartData.profit;
+        totalTasks += chartData.total;
+        chartDatasCustomField.add(chartData);
+      }
+      for (int i = 0; i < chartDatas.length; i++) {
+        chartDatasCustomField[i].percentTotal =
+            chartDatas[i].total / totalTasks;
+        chartDatasCustomField[i].percentProfit =
+            chartDatas[i].profit / totalProfit;
+      }
+      mapDatasCustomField[customField] = chartDatasCustomField;
+      //chartColors = getColors(chartDatas.length);
+      if (fieldIndex < fields.length - 1) {
+        getCalculateCustomFieldChild(project, parentCategory, fieldIndex + 1);
+      }
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
@@ -269,17 +419,97 @@ class _ChartScreenState extends State<ChartScreen> {
     );
   }
 
-  void _goToChildren() {
-    //showInSnackBar(categoryChooseId);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChartScreen(
-            projectId: widget.projectId!,
-            categoryId: categoryChooseId,
-            title: categoryChooseName),
+  Widget _buildChartCustom() {
+    List<Widget> listChartCustom = [];
+    for (int i = 0; i < fields.length; i++) {
+      String customField = fields[i].id;
+      listChartCustom.add(Text(fields[i].name));
+      listChartCustom.add(const SizedBox(height: 10));
+
+      listChartCustom.add(const SizedBox(height: 10));
+      listChartCustom.add(const Text('Lợi Ích (Triệu Đồng)'));
+      listChartCustom.add(_buildChartCustomItem(0, customField));
+
+      listChartCustom.add(const SizedBox(height: 10));
+      listChartCustom.add(const Text('Số Công Việc'));
+      listChartCustom.add(_buildChartCustomItem(1, customField));
+    }
+    return Column(children: listChartCustom);
+  }
+
+  Widget _buildChartCustomItem(int option, String customField) {
+    Widget card = Card(
+      color: Colors.white,
+      child: Row(
+        children: <Widget>[
+          const SizedBox(
+            height: 18,
+          ),
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: PieChart(
+                PieChartData(
+                    pieTouchData: PieTouchData(
+                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                      setState(() {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse == null ||
+                            pieTouchResponse.touchedSection == null) {
+                          mapTouchedIndexCustom[customField] = -1;
+                          return;
+                        }
+                        mapTouchedIndexCustom[customField] = pieTouchResponse
+                            .touchedSection!.touchedSectionIndex;
+                        if (mapTouchedIndexCustom[customField]! >= 0) {
+                          // showInSnackBar(
+                          //     mapTouchedIndexCustom[customField].toString());
+                          // categoryChooseName = chartDatas[touchedIndex].name;
+                          // categoryChooseId = chartDatas[touchedIndex].id;
+                        }
+                      });
+                    }),
+                    borderData: FlBorderData(
+                      show: false,
+                    ),
+                    sectionsSpace: 0,
+                    centerSpaceRadius: 40,
+                    sections:
+                        showingSectionsChartCustomField(option, customField)),
+              ),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            // cho vào vòng lặp được này
+            children: showingIndicatorsCustomField(customField),
+          ),
+          const SizedBox(
+            width: 28,
+          ),
+        ],
       ),
     );
+
+    return card;
+  }
+
+  void _goToChildren() {
+    //showInSnackBar(categoryChooseId);
+    if (mapCategories[categoryChooseId]!.isParent == true) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChartScreen(
+                projectId: widget.projectId!,
+                categoryId: categoryChooseId,
+                title: categoryChooseName),
+          ));
+    } else {
+      showInSnackBar("Không có danh mục con");
+    }
   }
 
   @override
@@ -294,6 +524,14 @@ class _ChartScreenState extends State<ChartScreen> {
       body: SingleChildScrollView(
           //aspectRatio: 1.3,
           child: Column(children: [
+        // categoryChooseName != "" ? Text(categoryChooseName) : Text(''),
+        // mapCategories[categoryChooseId]!.isParent == true
+        categoryChooseId != ""
+            ? ElevatedButton(
+                onPressed: _goToChildren,
+                child: Text('Xem danh mục con $categoryChooseName'),
+              )
+            : const Text(''),
         const SizedBox(height: 10),
         const Text('Lợi Ích (Triệu Đồng)'),
         // SizedBox(height: 10),
@@ -301,13 +539,9 @@ class _ChartScreenState extends State<ChartScreen> {
         const SizedBox(height: 10),
         const Text('Số Công Việc'),
         _buildChart(1),
-        categoryChooseName != "" ? Text(categoryChooseName) : Text(''),
-        categoryChooseId != ""
-            ? ElevatedButton(
-                onPressed: _goToChildren,
-                child: const Text('Xem danh mục Con'),
-              )
-            : const Text(''),
+
+        const Text('Custom Field'),
+        _buildChartCustom(),
       ])),
     );
   }
@@ -342,6 +576,55 @@ class _ChartScreenState extends State<ChartScreen> {
         nameItem = chartDatas[i].total.toString();
       }
       final isTouched = i == touchedIndex;
+      final fontSize = isTouched ? 25.0 : 16.0;
+      final radius = isTouched ? 60.0 : 50.0;
+      Color color = chooseColor(i);
+      PieChartSectionData sectionData = PieChartSectionData(
+        color: color,
+        value: valuePercent,
+        title: nameItem,
+        radius: radius,
+        titleStyle: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xffffffff)),
+      );
+      listPies.add(sectionData);
+    }
+    return listPies;
+  }
+
+  List<Widget> showingIndicatorsCustomField(String customField) {
+    List<Widget> indicatorsCustomField = [];
+    for (int i = 0; i < mapDatasCustomField[customField]!.length; i++) {
+      indicatorsCustomField.add(Indicator(
+        color: chooseColor(i),
+        text: mapDatasCustomField[customField]![i].name,
+        isSquare: true,
+      ));
+
+      indicatorsCustomField.add(const SizedBox(
+        height: 4,
+      ));
+    }
+    return indicatorsCustomField;
+  }
+
+  List<PieChartSectionData> showingSectionsChartCustomField(
+      int option, String customField) {
+    List<PieChartSectionData> listPies = [];
+    double valuePercent = 0;
+    String nameItem = "";
+
+    for (int i = 0; i < mapDatasCustomField[customField]!.length; i++) {
+      if (option == 0) {
+        valuePercent = mapDatasCustomField[customField]![i].percentProfit;
+        nameItem = mapDatasCustomField[customField]![i].profit.toString();
+      } else {
+        valuePercent = mapDatasCustomField[customField]![i].percentTotal;
+        nameItem = mapDatasCustomField[customField]![i].total.toString();
+      }
+      final isTouched = i == mapTouchedIndexCustom[customField];
       final fontSize = isTouched ? 25.0 : 16.0;
       final radius = isTouched ? 60.0 : 50.0;
       Color color = chooseColor(i);

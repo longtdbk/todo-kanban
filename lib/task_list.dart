@@ -469,7 +469,7 @@ class TaskListState extends State<TaskList> {
     String value = "{";
     for (int i = 0; i < fieldValues.length; i++) {
       if (fieldValues[i] != "") {
-        value += "'" + fields[i].name + "':'" + fieldValues[i] + "',";
+        value += "'" + fields[i].id + "':'" + fieldValues[i] + "',";
       }
     }
     value = value != "{" ? value.substring(0, value.length - 1) + "}" : "{}";
