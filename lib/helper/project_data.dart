@@ -4,4 +4,7 @@ class ProjectData {
   String code = '';
   String taskStatuses = '';
   int level = 0;
+  bool isShared = false;
+  String categoryShare = '';
+  String permissionShare = '';
 }

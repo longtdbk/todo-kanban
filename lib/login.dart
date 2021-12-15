@@ -102,14 +102,26 @@ class LoginFieldState extends State<LoginField> with RestorationMixin {
       isLoading = true;
     });
 
-    var url = 'http://www.vietinrace.com/srv/checkLogin/' +
-        person.email +
-        '/' +
-        person.password;
+    final response =
+        await http.post(Uri.parse('http://www.vietinrace.com/srvTD/checkUser/'),
+            headers: {
+              //'Content-Type': 'application/json; charset=UTF-8',
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            encoding: Encoding.getByName('utf-8'),
+            body: {
+              'email': person.email,
+              'password': person.password,
+            });
 
-    final response = await http
-        //.get(Uri.parse('https://jsonplaceholder.typicode.com/albums/1'));
-        .get(Uri.parse(url));
+    // var url = 'http://www.vietinrace.com/srvTD/checkUser/' +
+    //     person.email +
+    //     '/' +
+    //     person.password;
+
+    // final response = await http
+    //     //.get(Uri.parse('https://jsonplaceholder.typicode.com/albums/1'));
+    //     .get(Uri.parse(url));
 
     setState(() {
       isLoading = false;

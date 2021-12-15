@@ -23,9 +23,9 @@ import 'package:http/http.dart' as http;
 
 class TaskListScreen extends StatelessWidget {
   final String? projectId;
-  final CategoryData? category;
+  final String? categoryId;
 
-  const TaskListScreen({Key? key, this.projectId, this.category})
+  const TaskListScreen({Key? key, this.projectId, this.categoryId})
       : super(key: key);
 
   @override
@@ -41,15 +41,15 @@ class TaskListScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         //title: Text('Login'),
       ),
-      body: TaskList(projectId: projectId, category: category),
+      body: TaskList(projectId: projectId, categoryId: categoryId),
     );
   }
 }
 
 class TaskList extends StatefulWidget {
   final String? projectId;
-  final CategoryData? category;
-  const TaskList({Key? key, this.projectId, this.category}) : super(key: key);
+  final String? categoryId;
+  const TaskList({Key? key, this.projectId, this.categoryId}) : super(key: key);
 
   @override
   TaskListState createState() => TaskListState();
@@ -59,6 +59,7 @@ class TaskListState extends State<TaskList> {
   // with SingleTickerProviderStateMixin, RestorationMixin {
   //var projects = [];
   ProjectData projectData = ProjectData();
+  CategoryData categoryData = CategoryData();
   var tasks = [];
   List<CustomFieldData> fields = [];
   // List<String> dropdownValues = [];
@@ -74,10 +75,11 @@ class TaskListState extends State<TaskList> {
   void initState() {
     super.initState();
     project = widget.projectId!;
-    category = widget.category!.id;
+    category = widget.categoryId!;
     // String project = '61ab4b5084a5fa00241602dc';
 
     getProject();
+    getCategory();
     getCustomFieldsProject();
     //getTasksProject(project);
   }
@@ -118,6 +120,36 @@ class TaskListState extends State<TaskList> {
     }
   }
 
+  Future<void> getCategory() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    // final prefs = await SharedPreferences.getInstance();
+
+    var url =
+        'http://www.vietinrace.com/srvTD/getCategoryID/' + widget.categoryId!;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        categoryData.id = dat['id'];
+        categoryData.name = dat['name'];
+        categoryData.code = dat['code'];
+        categoryData.isParent = dat['isParent'];
+        categoryData.parent = dat['parent'];
+        categoryData.level = int.parse(dat['level']);
+      }
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
   // sau phải theo user nữa chứ ko phải chỉ thế này đâu ??
   Future<void> getTasksProject() async {
     tasks = [];
@@ -133,7 +165,7 @@ class TaskListState extends State<TaskList> {
     var url = 'http://www.vietinrace.com/srvTD/getTasksProjectCategory/' +
         widget.projectId! +
         '/' +
-        widget.category!.id;
+        widget.categoryId!;
     final response = await http.get(Uri.parse(url));
 
     setState(() {
@@ -149,6 +181,7 @@ class TaskListState extends State<TaskList> {
         task.description = dat['description'];
         task.status = dat['status'];
         task.type = dat['type'];
+        task.email = dat['email'];
         task.category = dat['category'];
         tasks.add(task);
       }
@@ -276,7 +309,7 @@ class TaskListState extends State<TaskList> {
           'profit': taskData.profit.toString(),
           'project': projectData.id,
           'email': prefs.getString('email'),
-          'category': widget.category!.id,
+          'category': widget.categoryId!,
           'custom_fields': taskData.customFields,
           'type': ''
         });
@@ -370,8 +403,7 @@ class TaskListState extends State<TaskList> {
                         title: Text(
                           tasksMap[taskStatuses[i].id][j].name,
                         ),
-                        subtitle:
-                            Text(tasksMap[taskStatuses[i].id][j].description),
+                        subtitle: Text(tasksMap[taskStatuses[i].id][j].email),
                       ),
                     // }
                   ]),
