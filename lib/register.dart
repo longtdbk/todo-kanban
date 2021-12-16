@@ -16,6 +16,7 @@ import 'helper/password_field.dart';
 import 'helper/person_data.dart';
 import 'login.dart';
 import 'package:http/http.dart' as http;
+import 'util/bottom_picker_custom.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -207,7 +208,7 @@ class RegisterFieldState extends State<RegisterField> with RestorationMixin {
       onTap: () {
         _showPicker(
           context: context,
-          child: _BottomPicker(
+          child: BottomPickerCustom(
             child: CupertinoDatePicker(
               backgroundColor:
                   CupertinoColors.systemBackground.resolveFrom(context),
@@ -220,7 +221,7 @@ class RegisterFieldState extends State<RegisterField> with RestorationMixin {
           ),
         );
       },
-      child: _Menu(children: [
+      child: MenuPickerCustom(children: [
         //const Icon(Icons.access_time_outlined),
         const Text('Ngày sinh'),
         Text(
@@ -412,68 +413,68 @@ class RegisterFieldState extends State<RegisterField> with RestorationMixin {
 //   }
 // }
 
-class _BottomPicker extends StatelessWidget {
-  const _BottomPicker({
-    Key? key,
-    @required this.child,
-  })  : assert(child != null),
-        super(key: key);
+// class _BottomPicker extends StatelessWidget {
+//   const _BottomPicker({
+//     Key? key,
+//     @required this.child,
+//   })  : assert(child != null),
+//         super(key: key);
 
-  final Widget? child;
+//   final Widget? child;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 216,
-      padding: const EdgeInsets.only(top: 6),
-      margin: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      color: CupertinoColors.systemBackground.resolveFrom(context),
-      child: DefaultTextStyle(
-        style: TextStyle(
-          color: CupertinoColors.label.resolveFrom(context),
-          fontSize: 22,
-        ),
-        child: GestureDetector(
-          // Blocks taps from propagating to the modal sheet and popping.
-          onTap: () {},
-          child: SafeArea(
-            top: false,
-            child: child!,
-          ),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       height: 216,
+//       padding: const EdgeInsets.only(top: 6),
+//       margin: EdgeInsets.only(
+//         bottom: MediaQuery.of(context).viewInsets.bottom,
+//       ),
+//       color: CupertinoColors.systemBackground.resolveFrom(context),
+//       child: DefaultTextStyle(
+//         style: TextStyle(
+//           color: CupertinoColors.label.resolveFrom(context),
+//           fontSize: 22,
+//         ),
+//         child: GestureDetector(
+//           // Blocks taps from propagating to the modal sheet and popping.
+//           onTap: () {},
+//           child: SafeArea(
+//             top: false,
+//             child: child!,
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
-class _Menu extends StatelessWidget {
-  const _Menu({
-    Key? key,
-    @required this.children,
-  })  : assert(children != null),
-        super(key: key);
+// class _Menu extends StatelessWidget {
+//   const _Menu({
+//     Key? key,
+//     @required this.children,
+//   })  : assert(children != null),
+//         super(key: key);
 
-  final List<Widget>? children;
+//   final List<Widget>? children;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: CupertinoColors.inactiveGray, width: 0),
-          bottom: BorderSide(color: CupertinoColors.inactiveGray, width: 0),
-        ),
-      ),
-      height: 60,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: children!,
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       decoration: const BoxDecoration(
+//         border: Border(
+//           top: BorderSide(color: CupertinoColors.inactiveGray, width: 0),
+//           bottom: BorderSide(color: CupertinoColors.inactiveGray, width: 0),
+//         ),
+//       ),
+//       height: 60,
+//       child: Padding(
+//         padding: const EdgeInsets.symmetric(horizontal: 4),
+//         child: Row(
+//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//           children: children!,
+//         ),
+//       ),
+//     );
+//   }
+// }

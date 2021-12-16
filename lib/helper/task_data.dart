@@ -29,6 +29,9 @@ class TaskData {
   String description = '';
   String customFields = '';
   String type = '';
+  String dateStart = '';
+  String dateFinish = '';
+  String dateFinishEstimate = '';
   String email = '';
   double profit = 0;
   String status = '';

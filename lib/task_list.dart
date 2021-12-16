@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Copyright 2019 The Flutter team. All rights reserved.
@@ -11,6 +12,7 @@ import 'package:flutter/material.dart';
 
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helper/categories_data.dart';
@@ -20,6 +22,8 @@ import 'helper/task_data.dart';
 import 'helper/task_status_data.dart';
 
 import 'package:http/http.dart' as http;
+
+import 'util/bottom_picker_custom.dart';
 
 class TaskListScreen extends StatelessWidget {
   final String? projectId;
@@ -60,6 +64,11 @@ class TaskListState extends State<TaskList> {
   //var projects = [];
   ProjectData projectData = ProjectData();
   CategoryData categoryData = CategoryData();
+
+  DateTime dateStart = DateTime.now();
+  DateTime dateEstimate = DateTime.now();
+  DateTime dateFinish = DateTime.now();
+
   var tasks = [];
   List<CustomFieldData> fields = [];
   // List<String> dropdownValues = [];
@@ -311,6 +320,9 @@ class TaskListState extends State<TaskList> {
           'email': prefs.getString('email'),
           'category': widget.categoryId!,
           'custom_fields': taskData.customFields,
+          'start_date': taskData.dateStart,
+          'finish_date': '',
+          'finish_estimate_date': taskData.dateFinishEstimate,
           'type': ''
         });
     //getTaskStatuses();
@@ -497,6 +509,10 @@ class TaskListState extends State<TaskList> {
     taskData.description = description;
     taskData.name = name;
     taskData.profit = profit;
+    var outputFormat = DateFormat('dd/MM/yyyy');
+    // var birthDate = outputFormat.format(date);
+    taskData.dateStart = outputFormat.format(dateStart);
+    taskData.dateFinishEstimate = outputFormat.format(dateEstimate);
 
     String value = "{";
     for (int i = 0; i < fieldValues.length; i++) {
@@ -614,6 +630,63 @@ class TaskListState extends State<TaskList> {
   //   return _customFields;
   // }
 
+  void _showPicker({
+    @required BuildContext? context,
+    @required Widget? child,
+  }) {
+    final themeData = CupertinoTheme.of(context!);
+    final dialogBody = CupertinoTheme(
+      data: themeData,
+      child: child!,
+    );
+
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (context) => dialogBody,
+    );
+  }
+
+  Widget _buildDatePicker(BuildContext context, String title, int option,
+      StateSetter setStateDate) {
+    DateTime date = DateTime.now();
+    if (option == 1) {
+      date = dateStart;
+    } else if (option == 2) {
+      date = dateEstimate;
+    }
+    return GestureDetector(
+      onTap: () {
+        _showPicker(
+          context: context,
+          child: BottomPickerCustom(
+            child: CupertinoDatePicker(
+              backgroundColor:
+                  CupertinoColors.systemBackground.resolveFrom(context),
+              mode: CupertinoDatePickerMode.date,
+              initialDateTime: date,
+              onDateTimeChanged: (newDateTime) {
+                setStateDate(() => {
+                      if (option == 1)
+                        {dateStart = newDateTime}
+                      else if (option == 2)
+                        {dateEstimate = newDateTime}
+                    });
+              },
+            ),
+          ),
+        );
+      },
+      child: MenuPickerCustom(children: [
+        //const Icon(Icons.access_time_outlined),
+        Text(title),
+        Text(
+          DateFormat.yMMMMd().format(date),
+          style: const TextStyle(color: CupertinoColors.inactiveGray),
+        ),
+      ]),
+    );
+  }
+
   void showBottomModalAdd2(int taskStatusIndex) {
     String name = "";
     String desc = "";
@@ -632,12 +705,12 @@ class TaskListState extends State<TaskList> {
         // dropdownValues.add("");
         // bool valueChecked = false;
 
-        return StatefulBuilder(
+        return SingleChildScrollView(child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
           return Padding(
               padding: MediaQuery.of(context).viewInsets,
               child: SizedBox(
-                  height: 450,
+                  height: 650,
                   child: Column(children: <Widget>[
                     Padding(
                         padding: const EdgeInsets.all(15),
@@ -675,6 +748,9 @@ class TaskListState extends State<TaskList> {
                     // Column(
                     //   children: createCustomFields(),
                     // ),
+                    _buildDatePicker(context, 'Ngày bắt đầu', 1, setState),
+                    _buildDatePicker(
+                        context, 'Ngày dự kiến hoàn thành', 2, setState),
                     for (int i = 0; i < fields.length; i++)
                       Row(children: [
                         const SizedBox(width: 20),
@@ -705,7 +781,7 @@ class TaskListState extends State<TaskList> {
                       },
                     )
                   ])));
-        });
+        }));
       },
     );
   }

@@ -12,6 +12,7 @@ import 'register.dart';
 import 'splashscreen.dart';
 // import 'task_list.dart';
 import 'task_type_list.dart';
+import 'path_chart.dart';
 // import 'package:graphic/graphic.dart';
 
 class Dashboard extends StatelessWidget {
@@ -38,6 +39,7 @@ class Dashboard extends StatelessWidget {
         //'/list_category': (context) => const CategoryListScreen(),
         '/list_task_type': (context) => const TaskTypeListScreen(),
         '/task_status': (context) => const TaskStatusScreen(),
+        '/line_chart': (context) => const PathChart(isShowingMainData: true),
         //'/list_task': (context) => const TaskListScreen(),
       },
 
@@ -138,6 +140,16 @@ class _DashboardPageState extends State<DashboardPage> {
           onTap: () {
             //Navigator.pop(context);
             Navigator.pushNamed(context, '/list_project');
+          },
+        ),
+        ListTile(
+          title: const Text(
+            'Line Chart',
+          ),
+          leading: const Icon(Icons.pan_tool),
+          onTap: () {
+            //Navigator.pop(context);
+            Navigator.pushNamed(context, '/line_chart');
           },
         ),
         // ListTile(
