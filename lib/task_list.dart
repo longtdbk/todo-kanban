@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 // import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:kanban_dashboard/task_add.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helper/categories_data.dart';
@@ -186,12 +187,18 @@ class TaskListState extends State<TaskList> {
       for (var dat in data) {
         TaskData task = TaskData();
         task.name = dat['name'];
+        task.id = dat['id'];
         task.code = dat['code'];
         task.description = dat['description'];
         task.status = dat['status'];
+        task.profit = double.parse(dat['profit']);
         task.type = dat['type'];
         task.email = dat['email'];
         task.category = dat['category'];
+        task.dateStart = dat['start_date'];
+        task.customFields = dat['custom_fields'];
+        task.dateFinishEstimate = dat['finish_estimate_date'];
+        // task.dateFinish = dat['finish_date'];
         tasks.add(task);
       }
       for (int i = 0; i < tasks.length; i++) {
@@ -341,10 +348,26 @@ class TaskListState extends State<TaskList> {
     //Navigator.pop(context);
   }
 
-  // void _routeToAddProject() {
-  //   Navigator.of(context).pushReplacement(MaterialPageRoute(
-  //       builder: (BuildContext context) => const ProjectAddScreen()));
-  // }
+  void _routeToAddTask(String taskStatusId) {
+    // Để ý là push hay push replace ment
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (BuildContext context) => TaskAdd(
+              projectId: widget.projectId!,
+              categoryId: widget.categoryId!,
+              taskStatusId: taskStatusId,
+            )));
+  }
+
+  void _routeToEditTask(TaskData taskData) {
+    // Để ý là push hay push replace ment
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (BuildContext context) => TaskAdd(
+              projectId: widget.projectId!,
+              categoryId: widget.categoryId!,
+              taskStatusId: taskData.status,
+              taskData: taskData,
+            )));
+  }
 
   int _current = 0;
   final List<String> imgList = [
@@ -409,14 +432,15 @@ class TaskListState extends State<TaskList> {
                         j++)
                       //if (tasks[j].status == taskStatuses[i].id ){
                       ListTile(
-                        leading: ExcludeSemantics(
-                          child: CircleAvatar(child: Text('${j + 1}')),
-                        ),
-                        title: Text(
-                          tasksMap[taskStatuses[i].id][j].name,
-                        ),
-                        subtitle: Text(tasksMap[taskStatuses[i].id][j].email),
-                      ),
+                          leading: ExcludeSemantics(
+                            child: CircleAvatar(child: Text('${j + 1}')),
+                          ),
+                          title: Text(
+                            tasksMap[taskStatuses[i].id][j].name,
+                          ),
+                          subtitle: Text(tasksMap[taskStatuses[i].id][j].email),
+                          trailing:
+                              _createMenuTask(tasksMap[taskStatuses[i].id][j])),
                     // }
                   ]),
             ),
@@ -427,8 +451,8 @@ class TaskListState extends State<TaskList> {
               heroTag: null, // done luôn :))
               onPressed: () {
                 // showBottomModalAdd(taskStatuses[i].id);
-                showBottomModalAdd2(i);
-                // _routeToAddCategory();
+                //showBottomModalAdd2(i);
+                _routeToAddTask(taskStatuses[i].id);
                 //createModal();
               },
               tooltip: 'Tạo Công Việc mới',
@@ -439,67 +463,6 @@ class TaskListState extends State<TaskList> {
       imageSliders.add(w);
     }
   }
-
-  // void createTabItem2() {
-  //   for (int i = 0; i < taskStatuses.length; i++) {
-  //     Widget w = Container(
-  //       child: Container(
-  //         margin: EdgeInsets.all(5.0),
-  //         child: ClipRRect(
-  //             borderRadius: BorderRadius.all(Radius.circular(5.0)),
-  //             // ô, hay thật, cái này là hiển thị phía trên :)
-  //             child: Stack(
-  //               children: <Widget>[
-  //                 Image.network(imgList[i],
-  //                     fit: BoxFit.cover, width: 1000.0, height: 600),
-  //                 Positioned(
-  //                   bottom: 0.0,
-  //                   left: 0.0,
-  //                   right: 0.0,
-  //                   child: Container(
-  //                     decoration: BoxDecoration(
-  //                       gradient: LinearGradient(
-  //                         colors: [
-  //                           Color.fromARGB(200, 0, 0, 0),
-  //                           Color.fromARGB(0, 0, 0, 0)
-  //                         ],
-  //                         begin: Alignment.bottomCenter,
-  //                         end: Alignment.topCenter,
-  //                       ),
-  //                     ),
-  //                     padding: EdgeInsets.symmetric(
-  //                         vertical: 10.0, horizontal: 20.0),
-  //                     child: Text(
-  //                       'No. ${taskStatuses[i].name} image',
-  //                       style: TextStyle(
-  //                         color: Colors.white,
-  //                         fontSize: 20.0,
-  //                         fontWeight: FontWeight.bold,
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ),
-  //               ],
-  //             )),
-  //       ),
-  //     );
-  //     imageSliders.add(w);
-  //   }
-  // }
-
-  // void showBottomModalAdd(String id) {
-  //   showModalBottomSheet<void>(
-  //     context: context,
-  //     isScrollControlled: true,
-  //     builder: (context) {
-  //       return TaskAdd(
-  //           taskStatusId: id,
-  //           category: widget.category,
-  //           fields: fields,
-  //           project: widget.project!);
-  //     },
-  //   );
-  // }
 
   void _handleSubmitted(int taskStatusIndex, String name, String description,
       double profit, List<String> fieldValues) {
@@ -527,47 +490,6 @@ class TaskListState extends State<TaskList> {
     //showInSnackBar("Tên:" + person.name + "SĐT:" + person.phoneNumber);
   }
 
-  // List<Widget> createCustomFields() {
-  //   // tao cac truong
-  //   List<Widget> _customFields = [];
-
-  //   for (int i = 0; i < fields.length; i++) {
-  //     List<Widget> _rowsItem = [];
-  //     _rowsItem.add(const SizedBox(width: 20));
-  //     _rowsItem.add(Text(fields[i].name));
-  //     _rowsItem.add(const SizedBox(width: 20));
-  //     _rowsItem.add(Text(dropdownValue));
-  //     var data = jsonDecode(fields[i].value.replaceAll("'", "\""));
-  //     List<PopupMenuItem<String>> menu = [];
-  //     for (int j = 1; j <= data.length; j++) {
-  //       var menuItem = PopupMenuItem<String>(
-  //           value: j.toString(),
-  //           child: ListTile(
-  //               // leading: const Icon(Icons.visibility),
-  //               title: Text(
-  //             data[j.toString()],
-  //           )));
-  //       menu.add(menuItem);
-  //     }
-
-  //     PopupMenuButton<String> popupMenu = PopupMenuButton<String>(
-  //       padding: EdgeInsets.zero,
-  //       onSelected: (value) => {
-  //         setState(() {
-  //           dropdownValue = data[value];
-  //           // valueSelected = data[value];
-  //         }),
-  //         dropdownValues[i] == data[value]
-  //       },
-  //       itemBuilder: (context) => menu,
-  //     );
-
-  //     _rowsItem.add(popupMenu);
-  //     _customFields.add(Row(children: _rowsItem));
-  //   }
-  //   return _customFields;
-  // }
-
   List<PopupMenuEntry<String>> creteMenuSample(int i) {
     List<PopupMenuEntry<String>> menu = [];
     var data = jsonDecode(fields[i].value.replaceAll("'", "\""));
@@ -584,51 +506,37 @@ class TaskListState extends State<TaskList> {
     return menu;
   }
 
-  // List<Widget> createCustomFields2() {
-  //   // tao cac truong
-  //   List<Widget> _customFields = [];
+  Widget _createMenuTask(TaskData taskData) {
+    List<PopupMenuEntry<String>> menu = [];
+    var menuItem = const PopupMenuItem<String>(
+      value: 'edit',
+      child: ListTile(
+          // leading: const Icon(Icons.visibility),
+          title: Text('Sửa thông tin')),
+    );
+    menu.add(menuItem);
 
-  //   for (int i = 0; i < fields.length; i++) {
-  //     List<Widget> _rowsItem = [];
+    var menuItem2 = const PopupMenuItem<String>(
+        value: 'change_status',
+        child: ListTile(
+            // leading: const Icon(Icons.visibility),
+            title: Text('Đổi trạng thái')));
+    menu.add(menuItem2);
 
-  //     _rowsItem.add(Text(fields[i].name));
-
-  //     var data = jsonDecode(fields[i].value.replaceAll("'", "\""));
-  //     List<DropdownMenuItem<String>> menu = [];
-  //     // var dropdownValue = "";
-
-  //     if (data.length > 0) {
-  //       for (int j = 1; j <= data.length; j++) {
-  //         var menuItem = DropdownMenuItem<String>(
-  //           value: j.toString(),
-  //           child: Text(data[j.toString()]),
-  //         );
-  //         menu.add(menuItem);
-  //       }
-  //       dropdownValues[i] = '1';
-  //       //dropdownValues.add(data['1']);
-  //       DropdownButton<String> dropDownItem = DropdownButton<String>(
-  //           value: dropdownValue,
-  //           icon: const Icon(Icons.arrow_downward),
-  //           elevation: 16,
-  //           style: const TextStyle(color: Colors.deepPurple),
-  //           underline: Container(
-  //             height: 2,
-  //             color: Colors.deepPurpleAccent,
-  //           ),
-  //           onChanged: (String? newValue) {
-  //             setState(() {
-  //               dropdownValue = newValue!;
-  //             });
-  //           },
-  //           items: menu);
-
-  //       _rowsItem.add(dropDownItem);
-  //       _customFields.add(Row(children: _rowsItem));
-  //     }
-  //   }
-  //   return _customFields;
-  // }
+    var popUpMenu = PopupMenuButton<String>(
+      padding: EdgeInsets.zero,
+      onSelected: (value) => {
+        if (value == "edit") {_routeToEditTask(taskData)}
+        // setState(() {
+        //   dropdownTexts[i] = fields[i].valueFields[value];
+        //   dropdownValues[i] = value;
+        //   // valueSelected = data[value];
+        // }),
+      },
+      itemBuilder: (context) => menu,
+    );
+    return popUpMenu;
+  }
 
   void _showPicker({
     @required BuildContext? context,

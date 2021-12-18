@@ -25,6 +25,7 @@ class TasksData {
 
 class TaskData {
   String name = '';
+  String id = '';
   String code = '';
   String description = '';
   String customFields = '';
