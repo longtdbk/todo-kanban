@@ -19,7 +19,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'helper/categories_data.dart';
 import 'helper/custom_field_data.dart';
 import 'helper/project_data.dart';
+import 'helper/task_comment_data.dart';
 import 'helper/task_data.dart';
+import 'helper/task_log_data.dart';
 import 'helper/task_status_data.dart';
 
 import 'package:http/http.dart' as http;
@@ -71,6 +73,9 @@ class TaskListState extends State<TaskList> {
   DateTime dateFinish = DateTime.now();
 
   var tasks = [];
+  var taskLogs = [];
+  var taskComments = [];
+
   List<CustomFieldData> fields = [];
   // List<String> dropdownValues = [];
   // String dropdownValue = "1";
@@ -78,8 +83,11 @@ class TaskListState extends State<TaskList> {
   HashMap tasksMap = HashMap<String, List<TaskData>>();
   var taskStatuses = [];
   bool isLoading = false;
+
+  bool isLoadingBottom = false;
   String project = '';
   String category = '';
+  String statusChoice = '';
   // String project = '';
   @override
   void initState() {
@@ -348,6 +356,111 @@ class TaskListState extends State<TaskList> {
     //Navigator.pop(context);
   }
 
+  Future<void> updateTaskID(TaskData taskData) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    final response = await http.post(
+        Uri.parse('http://www.vietinrace.com/srvTD/editTaskPost/'),
+        headers: {
+          //'Content-Type': 'application/json; charset=UTF-8',
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        encoding: Encoding.getByName('utf-8'),
+        body: {
+          'name': taskData.name,
+          'description': taskData.description,
+          'task_id': taskData.id,
+          'status': taskData.status,
+          'profit': taskData.profit.toString(),
+          'project': widget.projectId!,
+          'email': prefs.getString('email'),
+          'category': widget.categoryId!,
+          'custom_fields': taskData.customFields,
+          'start_date': taskData.dateStart,
+          // 'finish_date': '',
+          'finish_estimate_date': taskData.dateFinishEstimate,
+          // 'type': ''
+        });
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      // var status = json['data'][0]['status'];
+      var msg = json['data'][0]['msg'];
+      showInSnackBar(msg);
+      Navigator.pop(context);
+      getProject();
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  Future<void> getLogs(String taskId) async {
+    taskLogs = [];
+    setState(() {
+      isLoadingBottom = true;
+    });
+
+    // final prefs = await SharedPreferences.getInstance();
+
+    var url = 'http://www.vietinrace.com/srvTD/getTaskLogs/' + taskId;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoadingBottom = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        TaskLogData taskLogData = TaskLogData();
+        taskLogData.id = dat['id'];
+        taskLogData.content = dat['content'];
+        taskLogData.date = dat['created_date'];
+        taskLogData.email = dat['email'];
+        taskLogs.add(taskLogData);
+      }
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  Future<void> getComments(String taskId) async {
+    taskLogs = [];
+    setState(() {
+      isLoading = true;
+    });
+
+    // final prefs = await SharedPreferences.getInstance();
+
+    var url = 'http://www.vietinrace.com/srvTD/getTaskComments/' + taskId;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        TaskCommentData taskCommentData = TaskCommentData();
+        taskCommentData.id = dat['id'];
+        taskCommentData.content = dat['content'];
+        taskCommentData.date = dat['date'];
+        taskCommentData.email = dat['email'];
+        taskComments.add(taskCommentData);
+      }
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
   void _routeToAddTask(String taskStatusId) {
     // Để ý là push hay push replace ment
     Navigator.of(context).push(MaterialPageRoute(
@@ -523,15 +636,22 @@ class TaskListState extends State<TaskList> {
             title: Text('Đổi trạng thái')));
     menu.add(menuItem2);
 
+    var menuItem3 = const PopupMenuItem<String>(
+        value: 'view_log',
+        child: ListTile(
+            // leading: const Icon(Icons.visibility),
+            title: Text('Lịch sử Thay đổi')));
+    menu.add(menuItem3);
+
     var popUpMenu = PopupMenuButton<String>(
       padding: EdgeInsets.zero,
       onSelected: (value) => {
-        if (value == "edit") {_routeToEditTask(taskData)}
-        // setState(() {
-        //   dropdownTexts[i] = fields[i].valueFields[value];
-        //   dropdownValues[i] = value;
-        //   // valueSelected = data[value];
-        // }),
+        if (value == "edit")
+          {_routeToEditTask(taskData)}
+        else if (value == "view_log")
+          {showBottomModalListLog(taskData.id)}
+        else if (value == "change_status")
+          {showBottomModalChangeStatus(taskData)}
       },
       itemBuilder: (context) => menu,
     );
@@ -692,6 +812,128 @@ class TaskListState extends State<TaskList> {
         }));
       },
     );
+  }
+
+  List<Widget> _buildListLog() {
+    List<Widget> list = [];
+    if (isLoadingBottom) {
+      list.add(const Center(child: LinearProgressIndicator()));
+    } else {
+      for (int index = 0; index < taskLogs.length; index++) {
+        //ProjectData project = (ProjectData)projects[i];
+        ListTile item = ListTile(
+            leading: ExcludeSemantics(
+              child: CircleAvatar(child: Text('${index + 1}')),
+            ),
+            title: Text(
+              taskLogs[index].date,
+            ),
+            subtitle: Text(taskLogs[index].content),
+            onTap: () => {});
+
+        list.add(item);
+      }
+
+      // list.add(FloatingActionButton(
+      //   onPressed: () {
+      //     _routeToAddProject();
+      //   },
+      //   tooltip: 'Tạo dự án mới',
+      //   child: const Icon(Icons.add),
+      // ));
+    }
+
+    return list;
+  }
+
+  void showBottomModalListLog(String taskId) async {
+    await getLogs(taskId);
+
+    showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) {
+          return SingleChildScrollView(child: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+            return SizedBox(
+              height: 300,
+              child: ListView(
+                shrinkWrap: true,
+                restorationId: 'logs_list_view',
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: _buildListLog(),
+              ),
+            );
+          }));
+        });
+  }
+
+  Widget _buildChangeStatusDropDownList(
+      TaskData taskData, StateSetter setStateStatus) {
+    // if (statusChoice == '') {
+    //   statusChoice = taskData.status;
+    // }
+    List<DropdownMenuItem<String>> menu = [];
+    // var dropdownValue = "";
+    for (int j = 0; j < taskStatuses.length; j++) {
+      var menuItem = DropdownMenuItem<String>(
+        value: taskStatuses[j].id,
+        child: Text(taskStatuses[j].name),
+      );
+      menu.add(menuItem);
+    }
+
+    return Column(children: [
+      Row(children: [
+        const SizedBox(width: 50),
+        const Text('Trạng Thái'),
+        const SizedBox(width: 50),
+        //dropdownValues.add(data['1']);
+        DropdownButton<String>(
+            value: statusChoice,
+            icon: const Icon(Icons.arrow_downward),
+            elevation: 16,
+            style: const TextStyle(color: Colors.deepPurple),
+            underline: Container(
+              height: 2,
+              color: Colors.deepPurpleAccent,
+            ),
+            onChanged: (String? newValue) {
+              setStateStatus(() {
+                statusChoice = newValue!;
+              });
+            },
+            items: menu)
+      ]),
+      isLoading
+          ? const CircularProgressIndicator()
+          : ElevatedButton(
+              child: const Text('Cập nhật'),
+              onPressed: () {
+                taskData.status = statusChoice;
+                updateTaskID(taskData);
+                // Navigator.of(context).pop();
+              }),
+    ]);
+
+    // return dropDownItem;
+  }
+
+  void showBottomModalChangeStatus(TaskData taskData) async {
+    // await getLogs(taskId);
+    statusChoice = taskData.status;
+    showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) {
+          return SingleChildScrollView(child: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+            return SizedBox(
+              height: 200,
+              child: _buildChangeStatusDropDownList(taskData, setState),
+            );
+          }));
+        });
   }
 
   @override
