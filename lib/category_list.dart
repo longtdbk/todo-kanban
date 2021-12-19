@@ -491,6 +491,28 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
         });
   }
 
+  void _routeToTaskList(String key) {
+    CategoryData category = CategoryData();
+    for (int i = 0; i < categories.length; i++) {
+      if (categories[i].key == key) {
+        category.code = categories[i].code;
+        category.name = categories[i].name;
+        category.id = categories[i].id;
+        category.key = categories[i].key;
+        category.isParent = categories[i].isParent;
+      }
+    }
+    if (category.isParent == false) {
+      // _routeToTaskList(category.id);
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskListScreen(
+                projectId: widget.projectId, categoryId: category.id),
+          ));
+    }
+  }
+
   //tao cay :)
   @override
   Widget build(BuildContext context) {
@@ -557,26 +579,27 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
                             });
                           },
                           onNodeDoubleTap: (key) {
-                            CategoryData category = CategoryData();
-                            for (int i = 0; i < categories.length; i++) {
-                              if (categories[i].key == key) {
-                                category.code = categories[i].code;
-                                category.name = categories[i].name;
-                                category.id = categories[i].id;
-                                category.key = categories[i].key;
-                                category.isParent = categories[i].isParent;
-                              }
-                            }
-                            if (category.isParent == false) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => TaskListScreen(
-                                      projectId: widget.projectId,
-                                      categoryId: category.id),
-                                ),
-                              );
-                            }
+                            // CategoryData category = CategoryData();
+                            // for (int i = 0; i < categories.length; i++) {
+                            //   if (categories[i].key == key) {
+                            //     category.code = categories[i].code;
+                            //     category.name = categories[i].name;
+                            //     category.id = categories[i].id;
+                            //     category.key = categories[i].key;
+                            //     category.isParent = categories[i].isParent;
+                            //   }
+                            // }
+                            // if (category.isParent == false) {
+                            _routeToTaskList(key);
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) => TaskListScreen(
+                            //         projectId: widget.projectId,
+                            //         categoryId: category.id),
+                            //   ),
+                            // );
+                            // }
                           },
                           theme: _treeViewTheme,
                         ),
@@ -608,15 +631,14 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
           alignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             CupertinoButton(
+                child: const Text('Xem Công việc'),
+                onPressed: () {
+                  _routeToTaskList(_selectedNode);
+                }),
+            CupertinoButton(
               child: const Text('Thêm danh mục con'),
               onPressed: () {
-                // key == id
-                //_treeViewController.selectedNode!.key;
                 showAddChildren();
-                // setState(() {
-                //   _treeViewController =
-                //       _treeViewController.loadJSON(json: US_STATES_JSON);
-                // });
               },
             ),
             CupertinoButton(

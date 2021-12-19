@@ -463,23 +463,27 @@ class TaskListState extends State<TaskList> {
 
   void _routeToAddTask(String taskStatusId) {
     // Để ý là push hay push replace ment
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (BuildContext context) => TaskAdd(
-              projectId: widget.projectId!,
-              categoryId: widget.categoryId!,
-              taskStatusId: taskStatusId,
-            )));
+    Navigator.of(context)
+        .push(MaterialPageRoute(
+            builder: (BuildContext context) => TaskAdd(
+                  projectId: widget.projectId!,
+                  categoryId: widget.categoryId!,
+                  taskStatusId: taskStatusId,
+                )))
+        .then(onGoBack);
   }
 
   void _routeToEditTask(TaskData taskData) {
     // Để ý là push hay push replace ment
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (BuildContext context) => TaskAdd(
-              projectId: widget.projectId!,
-              categoryId: widget.categoryId!,
-              taskStatusId: taskData.status,
-              taskData: taskData,
-            )));
+    Navigator.of(context)
+        .push(MaterialPageRoute(
+            builder: (BuildContext context) => TaskAdd(
+                  projectId: widget.projectId!,
+                  categoryId: widget.categoryId!,
+                  taskStatusId: taskData.status,
+                  taskData: taskData,
+                )))
+        .then(onGoBack);
   }
 
   int _current = 0;
@@ -934,6 +938,10 @@ class TaskListState extends State<TaskList> {
             );
           }));
         });
+  }
+
+  FutureOr onGoBack(dynamic value) {
+    getProject();
   }
 
   @override

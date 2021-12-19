@@ -108,7 +108,7 @@ class TaskAddState extends State<TaskAdd> {
       // var status = json['data'][0]['status'];
       var msg = json['data'][0]['msg'];
       showInSnackBar(msg);
-      // Navigator.pop(context);
+      Navigator.pop(context);
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
@@ -274,6 +274,7 @@ class TaskAddState extends State<TaskAdd> {
       // var status = json['data'][0]['status'];
       var msg = json['data'][0]['msg'];
       showInSnackBar(msg);
+      Navigator.pop(context);
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
@@ -368,7 +369,7 @@ class TaskAddState extends State<TaskAdd> {
     taskData.description = description;
     taskData.name = name;
     taskData.profit = double.parse(profit);
-    var outputFormat = DateFormat('dd/MM/yyyy');
+    var outputFormat = DateFormat('yyyy-MM-dd');
     // var birthDate = outputFormat.format(date);
     taskData.dateStart = outputFormat.format(dateStart);
     taskData.dateFinishEstimate = outputFormat.format(dateEstimate);
@@ -411,7 +412,7 @@ class TaskAddState extends State<TaskAdd> {
     taskData.description = description;
     taskData.name = name;
     taskData.profit = double.parse(profit);
-    var outputFormat = DateFormat('dd/MM/yyyy');
+    var outputFormat = DateFormat('yyyy-MM-dd');
     // var birthDate = outputFormat.format(date);
     taskData.dateStart = outputFormat.format(dateStart);
     taskData.dateFinishEstimate = outputFormat.format(dateEstimate);
