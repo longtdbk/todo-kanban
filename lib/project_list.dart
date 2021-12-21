@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Copyright 2019 The Flutter team. All rights reserved.
@@ -12,8 +13,10 @@ import 'package:flutter/material.dart';
 import 'package:kanban_dashboard/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'chart_tab.dart';
 import 'helper/project_data.dart';
 import 'helper/user_data.dart';
+import 'line_chart.dart';
 import 'project.dart';
 import 'project_add.dart';
 import 'package:http/http.dart' as http;
@@ -120,6 +123,40 @@ class ProjectListState extends State<ProjectList> {
     }
   }
 
+  Future<void> updateProjectName(String projectId, String name) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final response = await http.post(
+        Uri.parse('http://www.vietinrace.com/srvTD/updateProjectPost/'),
+        headers: {
+          //'Content-Type': 'application/json; charset=UTF-8',
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        encoding: Encoding.getByName('utf-8'),
+        body: {
+          'id': projectId,
+          'value': name,
+          'option': '2',
+        });
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var status = json['data'][0]['status'];
+      var msg = json['data'][0]['msg'];
+      if (status == "true") {
+        getAllProjects();
+      }
+      Navigator.pop(context);
+      showInSnackBar(msg);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
   // lay tat ca project Shared = Post // hieu
   Future<void> getAllProjectsShared() async {
     projects = [];
@@ -187,31 +224,115 @@ class ProjectListState extends State<ProjectList> {
   }
 
   void _routeToAddProject() {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
+    Navigator.of(context).push(MaterialPageRoute(
         builder: (BuildContext context) => const ProjectAddScreen()));
   }
 
-  // void _handleTap(int index) {
-  //   if (!projects[index].isShared) {
-  //     Navigator.push(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (context) => ProjectSingle(project: projects[index]),
-  //       ),
-  //     );
-  //   } else {
-  //     if (projects[index].permission == "edit") {
-  //       Navigator.push(
-  //         context,
-  //         MaterialPageRoute(
-  //           builder: (context) => TaskListScreen(
-  //               projectId: projects[index].id,
-  //               categoryId: projects[index].categoryShare),
-  //         ),
-  //       );
-  //     }
-  //   }
-  // }
+  void _routeToManageTask(int index) {
+    if (!projects[index].isShared) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProjectSingle(project: projects[index]),
+        ),
+      );
+    } else {
+      if (projects[index].permissionShare == "edit") {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TaskListScreen(
+                  projectId: projects[index].id,
+                  categoryId: projects[index].categoryShare),
+            ));
+      }
+    }
+  }
+
+  void showEditProjectName(String projectId, String oldName) {
+    TextEditingController editingController =
+        TextEditingController(text: oldName);
+    showCupertinoDialog(
+        context: context,
+        builder: (context) {
+          return CupertinoAlertDialog(
+              title: const Text('Sửa tên'),
+              content: Container(
+                height: 80,
+                alignment: Alignment.center,
+                padding: const EdgeInsets.all(10),
+                child: CupertinoTextField(
+                  controller: editingController,
+                  autofocus: true,
+                ),
+              ),
+              actions: <Widget>[
+                CupertinoDialogAction(
+                  child: const Text('Cancel'),
+                  isDestructiveAction: true,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                CupertinoDialogAction(
+                  child: const Text('Update'),
+                  isDefaultAction: true,
+                  onPressed: () {
+                    if (editingController.text.isNotEmpty) {
+                      updateProjectName(projectId, editingController.text);
+                    }
+                    Navigator.of(context).pop();
+                  },
+                )
+              ]);
+        });
+  }
+
+  void _routeToChart(String projectId) {
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (BuildContext context) => TabChartPage(
+            projectId: projectId,
+            categoryId: '',
+            title: 'Thống Kê Chung',
+            year: '2021')));
+  }
+
+  Widget _createMenuProject(int index) {
+    List<PopupMenuEntry<String>> menu = [];
+    var menuItem = const PopupMenuItem<String>(
+      value: 'edit',
+      child: ListTile(
+          // leading: const Icon(Icons.visibility),
+          title: Text('Sửa tên')),
+    );
+    menu.add(menuItem);
+
+    var menuItem2 = const PopupMenuItem<String>(
+        value: 'task_list',
+        child: ListTile(
+            // leading: const Icon(Icons.visibility),
+            title: Text('Quản trị Công việc')));
+    menu.add(menuItem2);
+
+    var menuItem3 = const PopupMenuItem<String>(
+        value: 'view_chart',
+        child: ListTile(
+            // leading: const Icon(Icons.visibility),
+            title: Text('Biểu đồ')));
+    menu.add(menuItem3);
+
+    var popUpMenu = PopupMenuButton<String>(
+      padding: EdgeInsets.zero,
+      onSelected: (value) => {
+        if (value == "edit")
+          {showEditProjectName(projects[index].id, projects[index].name)}
+        else if (value == "task_list")
+          {_routeToManageTask(index)}
+        else if (value == "view_chart")
+          {_routeToChart(projects[index].id)}
+      },
+      itemBuilder: (context) => menu,
+    );
+    return popUpMenu;
+  }
 
   List<Widget> buildList() {
     List<Widget> list = [];
@@ -221,40 +342,42 @@ class ProjectListState extends State<ProjectList> {
       for (int index = 0; index < projects.length; index++) {
         //ProjectData project = (ProjectData)projects[i];
         ListTile item = ListTile(
-            leading: ExcludeSemantics(
-              child: CircleAvatar(child: Text('${index + 1}')),
-            ),
-            title: Text(
-              projects[index].name,
-            ),
-            subtitle: projects[index].isShared == true
-                ? const Text('Dự án được chia sẻ')
-                : const Text('Dự án quản lý'),
-            onTap: () => {
-                  if (!projects[index].isShared)
-                    {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ProjectSingle(project: projects[index]),
-                        ),
-                      )
-                    }
-                  else
-                    {
-                      if (projects[index].permissionShare == "edit")
-                        {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TaskListScreen(
-                                    projectId: projects[index].id,
-                                    categoryId: projects[index].categoryShare),
-                              ))
-                        }
-                    }
-                });
+          leading: ExcludeSemantics(
+            child: CircleAvatar(child: Text('${index + 1}')),
+          ),
+          title: Text(
+            projects[index].name,
+          ),
+          subtitle: projects[index].isShared == true
+              ? const Text('Dự án được chia sẻ')
+              : const Text('Dự án quản lý'),
+          trailing: _createMenuProject(index),
+          // onTap: () => {
+          //       if (!projects[index].isShared)
+          //         {
+          //           Navigator.push(
+          //             context,
+          //             MaterialPageRoute(
+          //               builder: (context) =>
+          //                   ProjectSingle(project: projects[index]),
+          //             ),
+          //           )
+          //         }
+          //       else
+          //         {
+          //           if (projects[index].permissionShare == "edit")
+          //             {
+          //               Navigator.push(
+          //                   context,
+          //                   MaterialPageRoute(
+          //                     builder: (context) => TaskListScreen(
+          //                         projectId: projects[index].id,
+          //                         categoryId: projects[index].categoryShare),
+          //                   ))
+          //             }
+          //         }
+          //     }
+        );
 
         list.add(item);
       }

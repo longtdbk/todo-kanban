@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
+import 'chart_tab.dart';
 import 'helper/categories_data.dart';
 import 'helper/chart_data.dart';
 import 'helper/custom_field_data.dart';
@@ -16,7 +17,9 @@ class ChartScreen extends StatefulWidget {
   final String? projectId;
   final String? title;
   final String? categoryId;
-  const ChartScreen({Key? key, this.projectId, this.categoryId, this.title})
+  final String? year;
+  const ChartScreen(
+      {Key? key, this.projectId, this.categoryId, this.title, this.year})
       : super(key: key);
 
   @override
@@ -249,10 +252,11 @@ class _ChartScreenState extends State<ChartScreen> {
           customField;
     }
     final response = await http.get(Uri.parse(url));
-
-    setState(() {
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
     if (response.statusCode == 200) {
       var json = jsonDecode(response.body);
       var data = json['data'];
@@ -268,11 +272,13 @@ class _ChartScreenState extends State<ChartScreen> {
         totalTasks += chartData.total;
         chartDatasCustomField.add(chartData);
       }
-      for (int i = 0; i < chartDatas.length; i++) {
+
+      // cai nay bi lech ????
+      for (int i = 0; i < chartDatasCustomField.length; i++) {
         chartDatasCustomField[i].percentTotal =
-            chartDatas[i].total / totalTasks;
+            chartDatasCustomField[i].total / totalTasks;
         chartDatasCustomField[i].percentProfit =
-            chartDatas[i].profit / totalProfit;
+            chartDatasCustomField[i].profit / totalProfit;
       }
       mapDatasCustomField[customField] = chartDatasCustomField;
       //chartColors = getColors(chartDatas.length);
@@ -502,10 +508,11 @@ class _ChartScreenState extends State<ChartScreen> {
       Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ChartScreen(
+            builder: (context) => TabChartPage(
                 projectId: widget.projectId!,
                 categoryId: categoryChooseId,
-                title: categoryChooseName),
+                title: categoryChooseName,
+                year: widget.year!),
           ));
     } else {
       showInSnackBar("Không có danh mục con");

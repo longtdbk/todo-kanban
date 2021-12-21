@@ -12,7 +12,7 @@ import 'register.dart';
 import 'splashscreen.dart';
 // import 'task_list.dart';
 import 'task_type_list.dart';
-import 'path_chart.dart';
+import 'line_chart.dart';
 // import 'package:graphic/graphic.dart';
 
 class Dashboard extends StatelessWidget {
@@ -39,7 +39,8 @@ class Dashboard extends StatelessWidget {
         //'/list_category': (context) => const CategoryListScreen(),
         '/list_task_type': (context) => const TaskTypeListScreen(),
         '/task_status': (context) => const TaskStatusScreen(),
-        '/line_chart': (context) => const PathChart(isShowingMainData: true),
+        '/line_chart': (context) =>
+            const LineChartPage(projectId: '61ab4b5084a5fa00241602dc'),
         //'/list_task': (context) => const TaskListScreen(),
       },
 
@@ -113,16 +114,16 @@ class _DashboardPageState extends State<DashboardPage> {
     final drawerItems = ListView(
       children: [
         drawerHeader,
-        ListTile(
-          title: const Text(
-            'Charts',
-          ),
-          leading: const Icon(Icons.favorite),
-          onTap: () {
-            //Navigator.pop(context);
-            Navigator.pushNamed(context, '/kanban');
-          },
-        ),
+        // ListTile(
+        //   title: const Text(
+        //     'Charts',
+        //   ),
+        //   leading: const Icon(Icons.favorite),
+        //   onTap: () {
+        //     //Navigator.pop(context);
+        //     Navigator.pushNamed(context, '/kanban');
+        //   },
+        // ),
         // ListTile(
         //   title: const Text(
         //     'Item Two',
@@ -136,22 +137,22 @@ class _DashboardPageState extends State<DashboardPage> {
           title: const Text(
             'Quản trị Dự án',
           ),
-          leading: const Icon(Icons.pan_tool),
+          leading: const Icon(Icons.manage_search),
           onTap: () {
             //Navigator.pop(context);
             Navigator.pushNamed(context, '/list_project');
           },
         ),
-        ListTile(
-          title: const Text(
-            'Line Chart',
-          ),
-          leading: const Icon(Icons.pan_tool),
-          onTap: () {
-            //Navigator.pop(context);
-            Navigator.pushNamed(context, '/line_chart');
-          },
-        ),
+        // ListTile(
+        //   title: const Text(
+        //     'Line Chart',
+        //   ),
+        //   leading: const Icon(Icons.pan_tool),
+        //   onTap: () {
+        //     //Navigator.pop(context);
+        //     Navigator.pushNamed(context, '/line_chart');
+        //   },
+        // ),
         // ListTile(
         //   title: const Text(
         //     'Quản trị Danh Mục',
@@ -162,16 +163,16 @@ class _DashboardPageState extends State<DashboardPage> {
         //     Navigator.pushNamed(context, '/list_category');
         //   },
         // ),
-        ListTile(
-          title: const Text(
-            'Quản trị Loại CV',
-          ),
-          leading: const Icon(Icons.air_sharp),
-          onTap: () {
-            //Navigator.pop(context);
-            Navigator.pushNamed(context, '/list_task_type');
-          },
-        ),
+        // ListTile(
+        //   title: const Text(
+        //     'Quản trị Loại CV',
+        //   ),
+        //   leading: const Icon(Icons.air_sharp),
+        //   onTap: () {
+        //     //Navigator.pop(context);
+        //     Navigator.pushNamed(context, '/list_task_type');
+        //   },
+        // ),
         // ListTile(
         //   title: const Text(
         //     'Quản trị Trạng Thái',
