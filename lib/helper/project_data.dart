@@ -8,3 +8,11 @@ class ProjectData {
   String categoryShare = '';
   String permissionShare = '';
 }
+
+class ProjectShareData {
+  String id = '';
+  String category = '';
+  String permission = '';
+  String project = '';
+  String email = '';
+}
