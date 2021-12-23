@@ -557,7 +557,11 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
     );
   }
 
-  void showAddChildren() {
+  void showAddChildren(int option) {
+    String categoryParent = '';
+    if (option > 0) {
+      categoryParent = _treeViewController.selectedNode!.key;
+    }
     TextEditingController editingController = TextEditingController(text: '');
     showCupertinoDialog(
         context: context,
@@ -584,8 +588,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
                   isDefaultAction: true,
                   onPressed: () {
                     if (editingController.text.isNotEmpty) {
-                      addCategoryChild(editingController.text,
-                          _treeViewController.selectedNode!.key);
+                      addCategoryChild(editingController.text, categoryParent);
                       // setState(() {
                       //   Node _node =
                       //       _treeViewController.selectedNode!;
@@ -813,10 +816,18 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
         });
     listButton.add(button);
     if (widget.categoryId == '') {
+      CupertinoButton button5 = CupertinoButton(
+        child: const Text('Thêm danh mục gốc'),
+        onPressed: () {
+          showAddChildren(0);
+        },
+      );
+      listButton.add(button5);
+
       CupertinoButton button2 = CupertinoButton(
         child: const Text('Thêm danh mục con'),
         onPressed: () {
-          showAddChildren();
+          showAddChildren(1);
         },
       );
       listButton.add(button2);

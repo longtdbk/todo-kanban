@@ -11,6 +11,7 @@ import 'chart_tab.dart';
 import 'helper/categories_data.dart';
 import 'helper/chart_data.dart';
 import 'helper/custom_field_data.dart';
+import 'helper/task_status_data.dart';
 import 'indicator.dart';
 
 class ChartScreen extends StatefulWidget {
@@ -33,6 +34,9 @@ class _ChartScreenState extends State<ChartScreen> {
   String categoryChooseId = "";
   var chartDatas = [];
 
+  List<TaskStatusData> taskStatuses = [];
+  String statuses = '';
+  List<bool> checkStatuses = [];
   // for customField
   var fields = [];
   HashMap<String, List<ChartData>> mapDatasCustomField =
@@ -49,7 +53,7 @@ class _ChartScreenState extends State<ChartScreen> {
   void initState() {
     super.initState();
 
-    getAllCategories();
+    getTaskStatus();
   }
 
   void showInSnackBar(String value) {
@@ -57,6 +61,41 @@ class _ChartScreenState extends State<ChartScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(value),
     ));
+  }
+
+  Future<void> getTaskStatus() async {
+    taskStatuses = [];
+    setState(() {
+      isLoading = true;
+    });
+
+    // final prefs = await SharedPreferences.getInstance();
+
+    var url =
+        'http://www.vietinrace.com/srvTD/getTaskStatus/' + widget.projectId!;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        TaskStatusData taskStatus = TaskStatusData(
+            id: dat['id'],
+            name: dat['name'],
+            shortName: dat['name'],
+            code: dat['code']);
+        taskStatuses.add(taskStatus);
+        statuses += taskStatus.id + "-";
+        checkStatuses.add(true);
+      }
+      statuses = statuses.substring(0, statuses.length - 1);
+      getAllCategories();
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
   }
 
   Future<void> getAllCategories() async {
@@ -86,6 +125,7 @@ class _ChartScreenState extends State<ChartScreen> {
             isParent: dat['is_parent'] == "true" ? true : false);
         mapCategories[dat['id']] = category;
       }
+
       if (widget.categoryId!.isEmpty) {
         getAllCategoriesProject(widget.projectId!, 0);
       } else {
@@ -107,7 +147,9 @@ class _ChartScreenState extends State<ChartScreen> {
     var url = 'http://www.vietinrace.com/srvTD/getCalculateTasksCategories/' +
         project +
         "/" +
-        level.toString();
+        level.toString() +
+        "/" +
+        statuses;
     final response = await http.get(Uri.parse(url));
 
     setState(() {
@@ -521,6 +563,62 @@ class _ChartScreenState extends State<ChartScreen> {
     }
   }
 
+  Widget _chooseStatus() {
+    List<Widget> listStatuses = [];
+
+    if (taskStatuses.length > 4) {
+      int rows = taskStatuses.length ~/ 4 + 1;
+      for (int i = 0; i < rows; i++) {
+        List<Widget> listStatusesRow = [];
+        for (int j = 4 * i; j < 4 + 4 * i; j++) {
+          Checkbox checkBox = Checkbox(
+              value: checkStatuses[j],
+              onChanged: (value) {
+                setState(() {
+                  checkStatuses[j] = value!;
+                  if (checkStatuses[j]) {
+                    statuses = statuses + "-" + taskStatuses[j].id;
+                  } else {
+                    statuses = statuses.replaceAll(taskStatuses[j].id, "");
+                  }
+                  statuses = statuses.replaceAll("--", "-");
+                  getAllCategories();
+                });
+              });
+          listStatusesRow.add(checkBox);
+          listStatusesRow.add(Text(taskStatuses[i].name));
+          listStatusesRow.add(const SizedBox(width: 10));
+        }
+        Row row = Row(children: listStatusesRow);
+        listStatuses.add(row);
+        //listStatuses.add(const SizedBox(height: 10));
+      }
+      return Column(children: listStatuses);
+    } else {
+      for (int i = 0; i < taskStatuses.length; i++) {
+        Checkbox checkBox = Checkbox(
+            value: checkStatuses[i],
+            onChanged: (value) {
+              setState(() {
+                checkStatuses[i] = value!;
+                if (checkStatuses[i]) {
+                  statuses = statuses + "-" + taskStatuses[i].id;
+                } else {
+                  statuses = statuses.replaceAll(taskStatuses[i].id, "");
+                }
+                statuses = statuses.replaceAll("--", "-");
+                getAllCategories();
+              });
+            });
+        listStatuses.add(checkBox);
+        listStatuses.add(Text(taskStatuses[i].name));
+        listStatuses.add(const SizedBox(width: 10));
+      }
+      Row row = Row(children: listStatuses);
+      return row;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -533,6 +631,7 @@ class _ChartScreenState extends State<ChartScreen> {
       body: SingleChildScrollView(
           //aspectRatio: 1.3,
           child: Column(children: [
+        _chooseStatus(),
         // categoryChooseName != "" ? Text(categoryChooseName) : Text(''),
         // mapCategories[categoryChooseId]!.isParent == true
         categoryChooseId != ""
