@@ -25,7 +25,9 @@ import 'package:flutter_treeview/flutter_treeview.dart';
 
 class CategoryListScreen extends StatelessWidget {
   final String? projectId;
-  const CategoryListScreen({Key? key, this.projectId}) : super(key: key);
+  final String? categoryId;
+  const CategoryListScreen({Key? key, this.projectId, this.categoryId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -43,16 +45,18 @@ class CategoryListScreen extends StatelessWidget {
         //title: Text('Login'),
       ),
       body: ProjectCategoryScreen(
-        //title: 'TreeViewExample',
-        projectId: projectId,
-      ),
+          //title: 'TreeViewExample',
+          projectId: projectId,
+          categoryId: categoryId),
     );
   }
 }
 
 class ProjectCategoryScreen extends StatefulWidget {
   final String? projectId;
-  const ProjectCategoryScreen({Key? key, this.projectId}) : super(key: key);
+  final String? categoryId;
+  const ProjectCategoryScreen({Key? key, this.projectId, this.categoryId})
+      : super(key: key);
   //final String? title;
 
   @override
@@ -62,7 +66,7 @@ class ProjectCategoryScreen extends StatefulWidget {
 class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
   List<CategoriesData> categories = [];
   List<ProjectShareData> projectShares = [];
-
+  CategoryData categoryPermission = CategoryData();
   bool isLoading = false;
   bool isLoadingBottom = false;
 
@@ -307,6 +311,12 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
             parent: dat['parent'],
             isParent: dat['is_parent'] == "true" ? true : false);
         categories.add(category);
+        if (widget.categoryId != '' && category.id == widget.categoryId!) {
+          categoryPermission.level = category.level;
+          categoryPermission.id = category.id;
+          categoryPermission.isParent = category.isParent;
+          categoryPermission.key = category.key;
+        }
       }
       if (categories.isNotEmpty) {
         _selectedNode = categories[0].id;
@@ -460,11 +470,15 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
       }
     }
     // }
-
-    for (int i = 0; i < categories.length; i++) {
-      if (categories[i].level == 0) {
-        _nodes.add(hashMap['0'][categories[i].key]);
+    if (widget.categoryId == '') {
+      for (int i = 0; i < categories.length; i++) {
+        if (categories[i].level == 0) {
+          _nodes.add(hashMap['0'][categories[i].key]);
+        }
       }
+    } else {
+      _nodes.add(
+          hashMap[categoryPermission.level.toString()][categoryPermission.key]);
     }
     return _nodes;
   }
@@ -790,6 +804,85 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
     Navigator.pop(context);
   }
 
+  List<Widget> createButtonItem() {
+    List<Widget> listButton = [];
+    CupertinoButton button = CupertinoButton(
+        child: const Text('Xem Công việc'),
+        onPressed: () {
+          _routeToTaskList(_selectedNode);
+        });
+    listButton.add(button);
+    if (widget.categoryId == '') {
+      CupertinoButton button2 = CupertinoButton(
+        child: const Text('Thêm danh mục con'),
+        onPressed: () {
+          showAddChildren();
+        },
+      );
+      listButton.add(button2);
+
+      CupertinoButton button3 = CupertinoButton(
+          child: const Text('Phân quyền'),
+          onPressed: () {
+            _showListShare();
+          });
+      listButton.add(button3);
+      CupertinoButton button4 = CupertinoButton(
+        child: const Text('Sửa tên'),
+        onPressed: () {
+          TextEditingController editingController = TextEditingController(
+              text: _treeViewController.selectedNode!.label);
+          showCupertinoDialog(
+              context: context,
+              builder: (context) {
+                return CupertinoAlertDialog(
+                  title: const Text('Sửa tên Danh Mục'),
+                  content: Container(
+                    height: 80,
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.all(10),
+                    child: CupertinoTextField(
+                      controller: editingController,
+                      autofocus: true,
+                    ),
+                  ),
+                  actions: <Widget>[
+                    CupertinoDialogAction(
+                      child: const Text('Cancel'),
+                      isDestructiveAction: true,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    CupertinoDialogAction(
+                      child: const Text('Update'),
+                      isDefaultAction: true,
+                      onPressed: () {
+                        if (editingController.text.isNotEmpty) {
+                          // setState(() {
+                          //   Node _node =
+                          //       _treeViewController.selectedNode!;
+                          //   _treeViewController =
+                          //       _treeViewController.withUpdateNode(
+                          //           _treeViewController.selectedKey!,
+                          //           _node.copyWith(
+                          //               label: editingController.text));
+                          // });
+                          //debugPrint(editingController.text);
+                          editCategory(editingController.text,
+                              _treeViewController.selectedNode!.key);
+                        }
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                );
+              });
+        },
+      );
+      listButton.add(button4);
+    }
+    return listButton;
+  }
+
   //tao cay :)
   @override
   Widget build(BuildContext context) {
@@ -906,75 +999,76 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
         top: false,
         child: ButtonBar(
           alignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            CupertinoButton(
-                child: const Text('Xem Công việc'),
-                onPressed: () {
-                  _routeToTaskList(_selectedNode);
-                }),
-            CupertinoButton(
-              child: const Text('Thêm danh mục con'),
-              onPressed: () {
-                showAddChildren();
-              },
-            ),
-            CupertinoButton(
-                child: const Text('Phân quyền'),
-                onPressed: () {
-                  _showListShare();
-                }),
-            CupertinoButton(
-              child: const Text('Sửa tên'),
-              onPressed: () {
-                TextEditingController editingController = TextEditingController(
-                    text: _treeViewController.selectedNode!.label);
-                showCupertinoDialog(
-                    context: context,
-                    builder: (context) {
-                      return CupertinoAlertDialog(
-                        title: const Text('Sửa tên Danh Mục'),
-                        content: Container(
-                          height: 80,
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.all(10),
-                          child: CupertinoTextField(
-                            controller: editingController,
-                            autofocus: true,
-                          ),
-                        ),
-                        actions: <Widget>[
-                          CupertinoDialogAction(
-                            child: const Text('Cancel'),
-                            isDestructiveAction: true,
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                          CupertinoDialogAction(
-                            child: const Text('Update'),
-                            isDefaultAction: true,
-                            onPressed: () {
-                              if (editingController.text.isNotEmpty) {
-                                // setState(() {
-                                //   Node _node =
-                                //       _treeViewController.selectedNode!;
-                                //   _treeViewController =
-                                //       _treeViewController.withUpdateNode(
-                                //           _treeViewController.selectedKey!,
-                                //           _node.copyWith(
-                                //               label: editingController.text));
-                                // });
-                                //debugPrint(editingController.text);
-                                editCategory(editingController.text,
-                                    _treeViewController.selectedNode!.key);
-                              }
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        ],
-                      );
-                    });
-              },
-            ),
-          ],
+          children: createButtonItem(),
+          // children: <Widget>[
+          //   CupertinoButton(
+          //       child: const Text('Xem Công việc'),
+          //       onPressed: () {
+          //         _routeToTaskList(_selectedNode);
+          //       }),
+          //   CupertinoButton(
+          //     child: const Text('Thêm danh mục con'),
+          //     onPressed: () {
+          //       showAddChildren();
+          //     },
+          //   ),
+          //   CupertinoButton(
+          //       child: const Text('Phân quyền'),
+          //       onPressed: () {
+          //         _showListShare();
+          //       }),
+          //   CupertinoButton(
+          //     child: const Text('Sửa tên'),
+          //     onPressed: () {
+          //       TextEditingController editingController = TextEditingController(
+          //           text: _treeViewController.selectedNode!.label);
+          //       showCupertinoDialog(
+          //           context: context,
+          //           builder: (context) {
+          //             return CupertinoAlertDialog(
+          //               title: const Text('Sửa tên Danh Mục'),
+          //               content: Container(
+          //                 height: 80,
+          //                 alignment: Alignment.center,
+          //                 padding: const EdgeInsets.all(10),
+          //                 child: CupertinoTextField(
+          //                   controller: editingController,
+          //                   autofocus: true,
+          //                 ),
+          //               ),
+          //               actions: <Widget>[
+          //                 CupertinoDialogAction(
+          //                   child: const Text('Cancel'),
+          //                   isDestructiveAction: true,
+          //                   onPressed: () => Navigator.of(context).pop(),
+          //                 ),
+          //                 CupertinoDialogAction(
+          //                   child: const Text('Update'),
+          //                   isDefaultAction: true,
+          //                   onPressed: () {
+          //                     if (editingController.text.isNotEmpty) {
+          //                       // setState(() {
+          //                       //   Node _node =
+          //                       //       _treeViewController.selectedNode!;
+          //                       //   _treeViewController =
+          //                       //       _treeViewController.withUpdateNode(
+          //                       //           _treeViewController.selectedKey!,
+          //                       //           _node.copyWith(
+          //                       //               label: editingController.text));
+          //                       // });
+          //                       //debugPrint(editingController.text);
+          //                       editCategory(editingController.text,
+          //                           _treeViewController.selectedNode!.key);
+          //                     }
+          //                     Navigator.of(context).pop();
+          //                   },
+          //                 ),
+          //               ],
+          //             );
+          //           });
+          //     },
+          //   ),
+          // ],
         ),
       ),
     );

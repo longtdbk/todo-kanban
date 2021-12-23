@@ -46,7 +46,9 @@ import 'task_status.dart';
 
 class ProjectSingle extends StatefulWidget {
   final ProjectData? project;
-  const ProjectSingle({Key? key, this.project}) : super(key: key);
+  final String? categoryId;
+  const ProjectSingle({Key? key, this.project, this.categoryId})
+      : super(key: key);
 
   @override
   ProjectSingleState createState() => ProjectSingleState();
@@ -64,9 +66,12 @@ class ProjectSingleState extends State<ProjectSingle> {
   final List<Widget> _listBody = [];
 
   void createTabItem() {
-    _listBody.add(ProjectCategoryScreen(projectId: widget.project!.id));
-    _listBody.add(TaskStatus(projectId: widget.project!.id));
-    _listBody.add(CustomFieldList(project: widget.project));
+    _listBody.add(ProjectCategoryScreen(
+        projectId: widget.project!.id, categoryId: widget.categoryId!));
+    if (widget.categoryId == '') {
+      _listBody.add(TaskStatus(projectId: widget.project!.id));
+      _listBody.add(CustomFieldList(project: widget.project));
+    }
   }
 
   @override
@@ -119,21 +124,29 @@ class ProjectSingleState extends State<ProjectSingle> {
     categories.add(category);
   }
 
-  // void _routeToAddProject() {
-  //   Navigator.of(context).pushReplacement(MaterialPageRoute(
-  //       builder: (BuildContext context) => const ProjectAddScreen()));
-  // }
+  Widget _buildBottomNavigation() {
+    List<BottomNavigationBarItem> listBottoms = [];
+    BottomNavigationBarItem barItem = const BottomNavigationBarItem(
+      icon: Icon(Icons.account_tree_outlined),
+      label: 'Danh mục',
+      backgroundColor: Colors.red,
+    );
+    listBottoms.add(barItem);
+    if (widget.categoryId == '') {
+      BottomNavigationBarItem barItem2 = const BottomNavigationBarItem(
+        icon: Icon(Icons.style_sharp),
+        label: 'Trạng Thái ',
+        backgroundColor: Colors.green,
+      );
+      listBottoms.add(barItem2);
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    //const sizedBoxSpace = SizedBox(height: 24);
-    //const sizedBoxWidth = SizedBox(width: 18);
+      BottomNavigationBarItem barItem3 = const BottomNavigationBarItem(
+        icon: Icon(Icons.control_point_duplicate_outlined),
+        label: 'Trường Tự chọn',
+        backgroundColor: Colors.purple,
+      );
+      listBottoms.add(barItem3);
+    }
 
     return Scaffold(
         appBar: AppBar(
@@ -145,26 +158,44 @@ class ProjectSingleState extends State<ProjectSingle> {
           child: _listBody.elementAt(_selectedIndex),
         ),
         bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_tree_outlined),
-              label: 'Danh mục',
-              backgroundColor: Colors.red,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.style_sharp),
-              label: 'Trạng Thái ',
-              backgroundColor: Colors.green,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.control_point_duplicate_outlined),
-              label: 'Trường Tự chọn',
-              backgroundColor: Colors.purple,
-            ),
-          ],
+          items: listBottoms,
           currentIndex: _selectedIndex,
           selectedItemColor: Colors.amber[800],
           onTap: _onItemTapped,
         ));
+  }
+  // void _routeToAddProject() {
+  //   Navigator.of(context).pushReplacement(MaterialPageRoute(
+  //       builder: (BuildContext context) => const ProjectAddScreen()));
+  // }
+
+  Widget _buildManagerCategory() {
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Dự án',
+          ),
+        ),
+        body: Center(
+            child: ProjectCategoryScreen(
+                projectId: widget.project!.id,
+                categoryId: widget.categoryId!)));
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    //const sizedBoxSpace = SizedBox(height: 24);
+    //const sizedBoxWidth = SizedBox(width: 18);
+    if (widget.categoryId != '') {
+      return _buildManagerCategory();
+    } else {
+      return _buildBottomNavigation();
+    }
   }
 }

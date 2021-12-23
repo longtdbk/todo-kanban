@@ -6,6 +6,9 @@ class ProjectData {
   int level = 0;
   bool isShared = false;
   String categoryShare = '';
+  bool categoryIsParent = false;
+  String categoryShareName = '';
+  int categoryShareLevel = 0;
   String permissionShare = '';
 }
 
@@ -15,4 +18,5 @@ class ProjectShareData {
   String permission = '';
   String project = '';
   String email = '';
+  String projectName = '';
 }

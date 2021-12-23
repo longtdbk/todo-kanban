@@ -180,7 +180,6 @@ class TaskStatusState extends State<TaskStatus> {
           'project': widget.projectId!,
         });
 
-    updateProjectTaskStatus();
     setState(() {
       isLoading = false;
     });
@@ -194,6 +193,7 @@ class TaskStatusState extends State<TaskStatus> {
         // add vao cuoi thoi :)
         selectedStatus.add(
             TaskStatusData(id: id, name: name, shortName: name, code: code));
+        updateProjectTaskStatus();
       }
       showInSnackBar(msg);
     } else {
@@ -260,7 +260,7 @@ class TaskStatusState extends State<TaskStatus> {
       value += "'" + (i + 1).toString() + "':'" + selectedStatus[i].id + "',";
     }
     value = value != "{" ? value.substring(0, value.length - 1) + "}" : "{}";
-
+    //value = value..replaceAll("'", "\""));
     final response = await http.post(
         Uri.parse('http://www.vietinrace.com/srvTD/updateProjectPost/'),
         headers: {

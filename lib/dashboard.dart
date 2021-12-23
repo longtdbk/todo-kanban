@@ -59,6 +59,7 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   int _selectedIndex = 0;
+  String userEmail = '';
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
   static const List<Widget> _widgetOptions = <Widget>[
@@ -91,23 +92,28 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    getSharedPreference();
+    //getSharedPreference();
   }
 
   void getSharedPreference() async {
     prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userEmail = prefs.getString('email')!;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    //await getUserInfo();
+    getSharedPreference();
     final drawerHeader = UserAccountsDrawerHeader(
-      accountName: Text(
+      accountName: const Text(
         'User Name',
       ),
       accountEmail: Text(
-        'longtdbk@gmail.com',
+        userEmail,
       ),
-      currentAccountPicture: CircleAvatar(
+      currentAccountPicture: const CircleAvatar(
         child: FlutterLogo(size: 42.0),
       ),
     );

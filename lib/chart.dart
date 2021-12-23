@@ -214,7 +214,9 @@ class _ChartScreenState extends State<ChartScreen> {
         mapIndexCustomName[field.id] = "";
         mapTouchedIndexCustom[field.id] = -1;
       }
-      getCalculateCustomFieldChild(project, parentCategory, 0);
+      if (fields.isNotEmpty) {
+        getCalculateCustomFieldChild(project, parentCategory, 0);
+      }
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }

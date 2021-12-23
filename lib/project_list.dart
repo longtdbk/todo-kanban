@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:kanban_dashboard/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'category_list.dart';
 import 'chart_tab.dart';
 import 'helper/project_data.dart';
 import 'helper/user_data.dart';
@@ -159,14 +160,13 @@ class ProjectListState extends State<ProjectList> {
 
   // lay tat ca project Shared = Post // hieu
   Future<void> getAllProjectsShared() async {
-    projects = [];
     setState(() {
       isLoading = true;
     });
 
     prefs = await SharedPreferences.getInstance();
 
-    var url = 'http://www.vietinrace.com/srvTD/getProjectsShare/' +
+    var url = 'http://www.vietinrace.com/srvTD/getSharedProject/' +
         prefs.getString('email')!;
     final response = await http.get(Uri.parse(url));
 
@@ -177,13 +177,17 @@ class ProjectListState extends State<ProjectList> {
       var json = jsonDecode(response.body);
       var data = json['data'];
       for (var dat in data) {
-        ProjectData project = ProjectData();
-        project.name = dat['name'];
-        project.id = dat['id'];
-        project.level = int.parse(dat['level']);
-        project.code = dat['code'];
-        project.taskStatuses = dat['task_statuses'];
-        projects.add(project);
+        ProjectData projectData = ProjectData();
+        projectData.categoryShare = dat['category'];
+        projectData.categoryShareName = dat['category_name'];
+        projectData.categoryIsParent =
+            dat['category_is_parent'] == "true" ? true : false;
+        projectData.categoryShareLevel = int.parse(dat['category_level']);
+        projectData.id = dat['project'];
+        projectData.name = dat['project_name'];
+        projectData.permissionShare = dat['permission'];
+        projectData.isShared = true;
+        projects.add(projectData);
       }
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
@@ -217,7 +221,9 @@ class ProjectListState extends State<ProjectList> {
         project.taskStatuses = dat['task_statuses'];
         projects.add(project);
       }
-      getUserProjectShared();
+      getAllProjectsShared();
+      //getUserProjectShared();
+
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
@@ -233,18 +239,29 @@ class ProjectListState extends State<ProjectList> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ProjectSingle(project: projects[index]),
+          builder: (context) =>
+              ProjectSingle(project: projects[index], categoryId: ''),
         ),
       );
     } else {
       if (projects[index].permissionShare == "edit") {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskListScreen(
-                  projectId: projects[index].id,
-                  categoryId: projects[index].categoryShare),
-            ));
+        if (projects[index].categoryIsParent) {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProjectSingle(
+                    project: projects[index],
+                    categoryId: projects[index].categoryShare),
+              ));
+        } else {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TaskListScreen(
+                    projectId: projects[index].id,
+                    categoryId: projects[index].categoryShare),
+              ));
+        }
       }
     }
   }
@@ -286,31 +303,49 @@ class ProjectListState extends State<ProjectList> {
         });
   }
 
-  void _routeToChart(String projectId) {
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (BuildContext context) => TabChartPage(
-            projectId: projectId,
-            categoryId: '',
-            title: 'Thống Kê Chung',
-            year: '2021')));
+  void _routeToChart(int index) {
+    if (!projects[index].isShared) {
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (BuildContext context) => TabChartPage(
+              projectId: projects[index].id,
+              categoryId: '',
+              title: 'Thống Kê Chung',
+              year: '2021')));
+    } else {
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (BuildContext context) => TabChartPage(
+              projectId: projects[index].id,
+              categoryId: projects[index].categoryShare,
+              title: 'Thống Kê',
+              year: '2021')));
+    }
   }
 
   Widget _createMenuProject(int index) {
     List<PopupMenuEntry<String>> menu = [];
-    var menuItem = const PopupMenuItem<String>(
-      value: 'edit',
-      child: ListTile(
-          // leading: const Icon(Icons.visibility),
-          title: Text('Sửa tên')),
-    );
-    menu.add(menuItem);
-
-    var menuItem2 = const PopupMenuItem<String>(
-        value: 'task_list',
+    if (!projects[index].isShared) {
+      var menuItem = const PopupMenuItem<String>(
+        value: 'edit',
         child: ListTile(
             // leading: const Icon(Icons.visibility),
-            title: Text('Quản trị Công việc')));
-    menu.add(menuItem2);
+            title: Text('Sửa tên')),
+      );
+      menu.add(menuItem);
+
+      var menuItem2 = const PopupMenuItem<String>(
+          value: 'task_list',
+          child: ListTile(
+              // leading: const Icon(Icons.visibility),
+              title: Text('Quản trị Công việc')));
+      menu.add(menuItem2);
+    } else if (projects[index].permissionShare == 'edit') {
+      var menuItem2 = const PopupMenuItem<String>(
+          value: 'task_list',
+          child: ListTile(
+              // leading: const Icon(Icons.visibility),
+              title: Text('Quản trị Công việc')));
+      menu.add(menuItem2);
+    }
 
     var menuItem3 = const PopupMenuItem<String>(
         value: 'view_chart',
@@ -327,7 +362,7 @@ class ProjectListState extends State<ProjectList> {
         else if (value == "task_list")
           {_routeToManageTask(index)}
         else if (value == "view_chart")
-          {_routeToChart(projects[index].id)}
+          {_routeToChart(index)}
       },
       itemBuilder: (context) => menu,
     );
