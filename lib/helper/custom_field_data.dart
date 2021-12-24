@@ -5,6 +5,8 @@ class CustomFieldData {
   String name = '';
   String code = '';
   String value = '';
+  String desc = '';
+  String type = '';
   HashMap valueFields = HashMap<String, String>();
   String isUse = '';
   //CategoriesData();

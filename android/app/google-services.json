@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "289081210638",
+    "project_id": "vietinrace-33392",
+    "storage_bucket": "vietinrace-33392.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:289081210638:android:04677af305cff083d2495f",
+        "android_client_info": {
+          "package_name": "com.awesomeproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "289081210638-f7brqs8uh90ocfson9t0hvi5drnl3182.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLfEDXujn-8k-_R4P6kZhoOqfGusAgI4o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "289081210638-f7brqs8uh90ocfson9t0hvi5drnl3182.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:289081210638:android:bfacb5da59dc8c93d2495f",
+        "android_client_info": {
+          "package_name": "com.example.kanban_dashboard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "289081210638-f7brqs8uh90ocfson9t0hvi5drnl3182.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLfEDXujn-8k-_R4P6kZhoOqfGusAgI4o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "289081210638-f7brqs8uh90ocfson9t0hvi5drnl3182.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

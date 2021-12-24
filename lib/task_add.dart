@@ -39,6 +39,9 @@ class TaskAddState extends State<TaskAdd> {
 
   var tasks = [];
   List<CustomFieldData> fields = [];
+  // List<CustomFieldData> fieldsList = [];
+  // List<CustomFieldData> fieldsNumber = [];
+  // List<CustomFieldData> fieldsText = [];
 
   var taskStatuses = [];
 
@@ -156,6 +159,9 @@ class TaskAddState extends State<TaskAdd> {
 
   Future<void> getCustomFieldsProject() async {
     fields = [];
+    // fieldsList = [];
+    // fieldsNumber = [];
+    // fieldsText = [];
     setState(() {
       isLoading = true;
     });
@@ -179,7 +185,8 @@ class TaskAddState extends State<TaskAdd> {
         field.id = dat['id'];
         field.value = dat['value'];
         field.isUse = dat['isUse'];
-
+        field.type = dat['type'];
+        field.desc = dat['description'];
         var data = jsonDecode(field.value.replaceAll("'", "\""));
         HashMap<String, String> values = HashMap<String, String>();
         for (int i = 1; i <= data.length; i++) {
@@ -188,6 +195,13 @@ class TaskAddState extends State<TaskAdd> {
         field.valueFields = values;
         // dropdownValues.add("");
         fields.add(field);
+        // if (field.type == "list") {
+        //   fieldsList.add(field);
+        // } else if (field.type == "number") {
+        //   fieldsNumber.add(field);
+        // } else if (field.type == "text") {
+        //   fieldsText.add(field);
+        // }
       }
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
@@ -368,7 +382,11 @@ class TaskAddState extends State<TaskAdd> {
     taskData.status = widget.taskStatusId!;
     taskData.description = description;
     taskData.name = name;
-    taskData.profit = double.parse(profit);
+    if (profit == "") {
+      taskData.profit = 0;
+    } else {
+      taskData.profit = double.parse(profit);
+    }
     var outputFormat = DateFormat('yyyy-MM-dd');
     // var birthDate = outputFormat.format(date);
     taskData.dateStart = outputFormat.format(dateStart);
@@ -384,7 +402,8 @@ class TaskAddState extends State<TaskAdd> {
     // taskData.customFields = value;
 
     String value = "[";
-    String type = "list"; // sau them list, number ???
+
+    // String type = "list"; // sau them list, number ???
     for (int i = 0; i < fieldValues.length; i++) {
       if (fieldValues[i] != "") {
         value += "{'id':'" +
@@ -392,7 +411,7 @@ class TaskAddState extends State<TaskAdd> {
             "','value':'" +
             fieldValues[i] +
             "','type':'" +
-            type +
+            fields[i].type +
             "'},";
       }
     }
@@ -411,7 +430,11 @@ class TaskAddState extends State<TaskAdd> {
     taskData.status = widget.taskData!.status;
     taskData.description = description;
     taskData.name = name;
-    taskData.profit = double.parse(profit);
+    if (profit == "") {
+      taskData.profit = 0;
+    } else {
+      taskData.profit = double.parse(profit);
+    }
     var outputFormat = DateFormat('yyyy-MM-dd');
     // var birthDate = outputFormat.format(date);
     taskData.dateStart = outputFormat.format(dateStart);
@@ -426,7 +449,7 @@ class TaskAddState extends State<TaskAdd> {
     // value = value != "{" ? value.substring(0, value.length - 1) + "}" : "{}";
 
     String value = "[";
-    String type = "list"; // sau them list, number ???
+    //String type = "list"; // sau them list, number ???
     for (int i = 0; i < fieldValues.length; i++) {
       if (fieldValues[i] != "") {
         value += "{'id':'" +
@@ -434,7 +457,7 @@ class TaskAddState extends State<TaskAdd> {
             "','value':'" +
             fieldValues[i] +
             "','type':'" +
-            type +
+            fields[i].type +
             "'},";
       }
     }
@@ -508,24 +531,37 @@ class TaskAddState extends State<TaskAdd> {
             _buildDatePicker(context, 'Ngày bắt đầu', 1, setState),
             _buildDatePicker(context, 'Ngày dự kiến hoàn thành', 2, setState),
             for (int i = 0; i < fields.length; i++)
-              Row(children: [
-                const SizedBox(width: 20),
-                Text(fields[i].name),
-                const SizedBox(width: 20),
-                Text(dropdownTexts[i]),
-                PopupMenuButton<String>(
-                  padding: EdgeInsets.zero,
-                  onSelected: (value) => {
-                    setState(() {
-                      dropdownTexts[i] = fields[i].valueFields[value];
-                      dropdownValues[i] = value;
-                      // valueSelected = data[value];
-                    }),
-                    //dropdownValues[i] == data[value]
-                  },
-                  itemBuilder: (context) => createMenuSample(i),
-                )
-              ]),
+              fields[i].type == 'list'
+                  ? Row(children: [
+                      const SizedBox(width: 20),
+                      Text(fields[i].name),
+                      const SizedBox(width: 20),
+                      Text(dropdownTexts[i]),
+                      PopupMenuButton<String>(
+                        padding: EdgeInsets.zero,
+                        onSelected: (value) => {
+                          setState(() {
+                            dropdownTexts[i] = fields[i].valueFields[value];
+                            dropdownValues[i] = value;
+                            // valueSelected = data[value];
+                          }),
+                          //dropdownValues[i] == data[value]
+                        },
+                        itemBuilder: (context) => createMenuSample(i),
+                      )
+                    ])
+                  : Padding(
+                      padding: const EdgeInsets.all(15),
+                      child: TextField(
+                        onChanged: (value) => {dropdownValues[i] = value},
+                        keyboardType: fields[i].type == "number"
+                            ? TextInputType.number
+                            : TextInputType.none,
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          labelText: fields[i].name,
+                        ),
+                      )),
             ElevatedButton(
               child: const Text('Tạo'),
               onPressed: () {
@@ -557,7 +593,11 @@ class TaskAddState extends State<TaskAdd> {
       for (int j = 0; j < fields.length; j++) {
         if (fields[j].id == data[i]['id']) {
           dropdownValues[j] = data[i]['value'];
-          dropdownTexts[j] = fields[j].valueFields[data[i]['value']];
+          if (fields[j].type == "list") {
+            dropdownTexts[j] = fields[j].valueFields[data[i]['value']];
+          } else {
+            dropdownTexts[j] = '';
+          }
         }
       }
     }
@@ -609,24 +649,39 @@ class TaskAddState extends State<TaskAdd> {
             _buildDatePicker(context, 'Ngày bắt đầu', 1, setState),
             _buildDatePicker(context, 'Ngày dự kiến hoàn thành', 2, setState),
             for (int i = 0; i < fields.length; i++)
-              Row(children: [
-                const SizedBox(width: 20),
-                Text(fields[i].name),
-                const SizedBox(width: 20),
-                Text(dropdownTexts[i]),
-                PopupMenuButton<String>(
-                  padding: EdgeInsets.zero,
-                  onSelected: (value) => {
-                    setState(() {
-                      dropdownTexts[i] = fields[i].valueFields[value];
-                      dropdownValues[i] = value;
-                      // valueSelected = data[value];
-                    }),
-                    //dropdownValues[i] == data[value]
-                  },
-                  itemBuilder: (context) => createMenuSample(i),
-                )
-              ]),
+              fields[i].type == "list"
+                  ? Row(children: [
+                      const SizedBox(width: 20),
+                      Text(fields[i].name),
+                      const SizedBox(width: 20),
+                      Text(dropdownTexts[i]),
+                      PopupMenuButton<String>(
+                        padding: EdgeInsets.zero,
+                        onSelected: (value) => {
+                          setState(() {
+                            dropdownTexts[i] = fields[i].valueFields[value];
+                            dropdownValues[i] = value;
+                            // valueSelected = data[value];
+                          }),
+                          //dropdownValues[i] == data[value]
+                        },
+                        itemBuilder: (context) => createMenuSample(i),
+                      )
+                    ])
+                  : Padding(
+                      padding: const EdgeInsets.all(15),
+                      child: TextField(
+                        controller: TextEditingController()
+                          ..text = dropdownValues[i],
+                        onChanged: (value) => {dropdownValues[i] = value},
+                        keyboardType: fields[i].type == "number"
+                            ? TextInputType.number
+                            : TextInputType.none,
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          labelText: fields[i].name,
+                        ),
+                      )),
             ElevatedButton(
               child: const Text('Cập nhật'),
               onPressed: () {

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
+// import 'dart:html';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -66,11 +67,11 @@ class CustomFieldListState extends State<CustomFieldList> {
   var taskStatuses = [];
   bool isLoading = false;
   String project = '';
+  String typeCustomField = 'list';
   @override
   void initState() {
     super.initState();
     project = widget.project!.id;
-
     getCustomFieldsProject(project);
   }
 
@@ -104,6 +105,8 @@ class CustomFieldListState extends State<CustomFieldList> {
         field.name = dat['name'];
         field.code = dat['name'];
         field.id = dat['id'];
+        field.type = dat['type'];
+        field.desc = dat['description'];
         field.value = dat['value'];
         fields.add(field);
       }
@@ -146,7 +149,8 @@ class CustomFieldListState extends State<CustomFieldList> {
   }
 
   //edit customfield includes (edit Value, add Value )
-  Future<void> addCustomFieldValue(String fieldName) async {
+  Future<void> addCustomFieldValue(
+      String fieldName, String desc, String type) async {
     setState(() {
       isLoading = true;
     });
@@ -163,6 +167,8 @@ class CustomFieldListState extends State<CustomFieldList> {
         body: {
           'project': widget.project!.id,
           'field_name': fieldName,
+          'field_desc': desc,
+          'field_type': type,
           'field_value': "{}",
         });
 
@@ -289,50 +295,98 @@ class CustomFieldListState extends State<CustomFieldList> {
         });
   }
 
-  void showBottomModalAddField() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        String name = "";
-        String desc = "";
-        return Padding(
-            padding: MediaQuery.of(context).viewInsets,
-            child: SizedBox(
-                height: 250,
-                child: Column(children: <Widget>[
-                  Padding(
-                      padding: const EdgeInsets.all(15),
-                      child: TextField(
-                        onChanged: (value) => {name = value},
-                        //controller: editingController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Tên trường',
-                        ),
-                      )),
-                  Padding(
-                    padding: const EdgeInsets.all(15),
-                    child: TextField(
-                      onChanged: (value) => {desc = value},
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Mô tả',
-                      ),
-                    ),
-                  ),
-                  ElevatedButton(
-                    child: const Text('Tạo'),
-                    onPressed: () {
-                      if (name != "") {
-                        addCustomFieldValue(name);
-                        Navigator.of(context).pop();
-                      }
-                    },
-                  )
-                ])));
-      },
+  Future<void> showBottomModalAddField() async {
+    List<DropdownMenuItem<String>> menuType = [];
+    var menuItem = const DropdownMenuItem<String>(
+      value: 'list',
+      child: Text('Danh sách - List'),
     );
+    menuType.add(menuItem);
+
+    var menuItem2 = const DropdownMenuItem<String>(
+      value: 'number',
+      child: Text('Số - Có vẽ biểu đồ'),
+    );
+    menuType.add(menuItem2);
+
+    var menuItem3 = const DropdownMenuItem<String>(
+      value: 'text',
+      child: Text('Văn bản - Text'),
+    );
+    menuType.add(menuItem3);
+
+    // da hieu roi day --> phai cho vao trong builder ???
+    String? message = await showModalBottomSheet<String>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) {
+          return CustomBottomSheet(projectId: widget.project!.id);
+          // return StatefulBuilder(builder: (context, StateSetter setState) {
+          //   String name = "";
+          //   String desc = "";
+          //   String type = "list";
+          //   return Padding(
+          //       padding: MediaQuery.of(context).viewInsets,
+          //       child: SizedBox(
+          //           height: 400,
+          //           child: Column(children: <Widget>[
+          //             Padding(
+          //                 padding: const EdgeInsets.all(15),
+          //                 child: TextField(
+          //                   onChanged: (value) => {name = value},
+          //                   //controller: editingController,
+          //                   decoration: const InputDecoration(
+          //                     border: OutlineInputBorder(),
+          //                     labelText: 'Tên trường',
+          //                   ),
+          //                 )),
+          //             Row(children: [
+          //               const SizedBox(width: 20),
+          //               const Text('Thể loại'),
+          //               const SizedBox(width: 20),
+          //               DropdownButton<String>(
+          //                   value: type,
+          //                   icon: const Icon(Icons.arrow_downward),
+          //                   elevation: 16,
+          //                   style: const TextStyle(color: Colors.deepPurple),
+          //                   underline: Container(
+          //                     height: 2,
+          //                     color: Colors.deepPurpleAccent,
+          //                   ),
+          //                   onChanged: (String? newValue) {
+          //                     setState(() {
+          //                       type = newValue!;
+          //                     });
+          //                   },
+          //                   items: menuType)
+          //             ]),
+          //             Padding(
+          //               padding: const EdgeInsets.all(15),
+          //               child: TextField(
+          //                 onChanged: (value) => {desc = value},
+          //                 decoration: const InputDecoration(
+          //                   border: OutlineInputBorder(),
+          //                   labelText: 'Mô tả',
+          //                 ),
+          //               ),
+          //             ),
+          //             ElevatedButton(
+          //               child: const Text('Tạo'),
+          //               onPressed: () {
+          //                 if (name != "") {
+          //                   addCustomFieldValue(name, desc, type);
+          //                   Navigator.of(context).pop();
+          //                 }
+          //               },
+          //             )
+          //           ])));
+          // });
+        });
+    showInSnackBar(message!);
+    //.whenComplete(() {
+    // });
+    //print("test:" + test!);
+    getCustomFieldsProject(widget.project!.id);
   }
 
   void processAddFieldValue(int fieldIndex, String value) {
@@ -364,14 +418,16 @@ class CustomFieldListState extends State<CustomFieldList> {
   Widget _itemTraling(int index) {
     List<PopupMenuEntry<String>> menu = [];
 
-    var menuItem = const PopupMenuItem<String>(
-        value: "add",
-        child: ListTile(
-            // leading: const Icon(Icons.visibility),
-            title: Text(
-          'Thêm giá trị mới',
-        )));
-    menu.add(menuItem);
+    if (fields[index].type == 'list') {
+      var menuItem = const PopupMenuItem<String>(
+          value: "add",
+          child: ListTile(
+              // leading: const Icon(Icons.visibility),
+              title: Text(
+            'Thêm giá trị mới',
+          )));
+      menu.add(menuItem);
+    }
 
     var menuItem2 = const PopupMenuItem<String>(
         value: "edit",
@@ -441,7 +497,7 @@ class CustomFieldListState extends State<CustomFieldList> {
             title: Text(
               fields[index].name,
             ),
-            subtitle: const Text('Trường'),
+            subtitle: Text('Loại: ' + fields[index].type),
             trailing: _itemTraling(index),
             onTap: () {});
         list.add(item);
@@ -497,5 +553,140 @@ class CustomFieldListState extends State<CustomFieldList> {
         ),
         color: Colors.white,
         backgroundColor: Colors.red);
+  }
+}
+
+class CustomBottomSheet extends StatefulWidget {
+  final String? projectId;
+  const CustomBottomSheet({Key? key, this.projectId}) : super(key: key);
+  @override
+  _CustomBottomSheetState createState() => _CustomBottomSheetState();
+}
+
+class _CustomBottomSheetState extends State<CustomBottomSheet> {
+  List<DropdownMenuItem<String>> menuType = [];
+
+  String name = "";
+  String desc = "";
+  String type = "list";
+  bool isLoading = false;
+
+  // void showInSnackBar(String value) {
+  //   ScaffoldMessenger.of(context).hideCurrentSnackBar();
+  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //     content: Text(value),
+  //   ));
+  // }
+
+  Future<void> addCustomFieldValue(
+      String fieldName, String desc, String type) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    // final prefs = await SharedPreferences.getInstance();
+
+    final response = await http.post(
+        Uri.parse('http://www.vietinrace.com/srvTD/addCustomFieldPost/'),
+        headers: {
+          //'Content-Type': 'application/json; charset=UTF-8',
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        encoding: Encoding.getByName('utf-8'),
+        body: {
+          'project': widget.projectId,
+          'field_name': fieldName,
+          'field_desc': desc,
+          'field_type': type,
+          'field_value': "{}",
+        });
+
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      // var status = json['data'][0]['status'];
+      var msg = json['data'][0]['msg'];
+      // showInSnackBar(msg);
+      //getCustomFieldsProject(widget.project!.id);
+      Navigator.of(context).pop(msg);
+    } else {
+      // showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    menuType = [];
+    var menuItem = const DropdownMenuItem<String>(
+      value: 'list',
+      child: Text('Danh sách - List'),
+    );
+    menuType.add(menuItem);
+
+    var menuItem2 = const DropdownMenuItem<String>(
+      value: 'number',
+      child: Text('Số - Có vẽ biểu đồ'),
+    );
+    menuType.add(menuItem2);
+
+    var menuItem3 = const DropdownMenuItem<String>(
+      value: 'text',
+      child: Text('Văn bản - Text'),
+    );
+    menuType.add(menuItem3);
+
+    return Padding(
+        padding: MediaQuery.of(context).viewInsets,
+        child: SizedBox(
+            height: 400,
+            child: Column(children: <Widget>[
+              Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: TextField(
+                    onChanged: (value) => {name = value},
+                    //controller: editingController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Tên trường',
+                    ),
+                  )),
+              Row(children: [
+                const SizedBox(width: 20),
+                const Text('Thể loại'),
+                const SizedBox(width: 20),
+                DropdownButton<String>(
+                    value: type,
+                    icon: const Icon(Icons.arrow_downward),
+                    elevation: 16,
+                    style: const TextStyle(color: Colors.deepPurple),
+                    underline: Container(
+                      height: 2,
+                      color: Colors.deepPurpleAccent,
+                    ),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        type = newValue!;
+                      });
+                    },
+                    items: menuType)
+              ]),
+              Padding(
+                padding: const EdgeInsets.all(15),
+                child: TextField(
+                  onChanged: (value) => {desc = value},
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Mô tả',
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                child: const Text('Tạo'),
+                onPressed: () {
+                  if (name != "") {
+                    addCustomFieldValue(name, desc, type);
+                  }
+                },
+              )
+            ])));
   }
 }
