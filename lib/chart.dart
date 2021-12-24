@@ -39,10 +39,17 @@ class _ChartScreenState extends State<ChartScreen> {
   List<bool> checkStatuses = [];
   // for customField
   var fields = [];
+  var fieldsNumber = [];
   HashMap<String, List<ChartData>> mapDatasCustomField =
       HashMap<String, List<ChartData>>();
   HashMap<String, int> mapTouchedIndexCustom = HashMap<String, int>();
   HashMap<String, String> mapIndexCustomName = HashMap<String, String>();
+
+  HashMap<String, List<ChartData>> mapDatasCustomFieldNumber =
+      HashMap<String, List<ChartData>>();
+  HashMap<String, int> mapTouchedIndexCustomNumber = HashMap<String, int>();
+  HashMap<String, String> mapIndexCustomNumberName = HashMap<String, String>();
+
   HashMap<String, CategoriesData> mapCategories =
       HashMap<String, CategoriesData>();
   List<Color> chartColors = [];
@@ -251,13 +258,25 @@ class _ChartScreenState extends State<ChartScreen> {
         field.code = dat['name'];
         field.id = dat['id'];
         field.value = dat['value'];
-        fields.add(field);
-        mapDatasCustomField[field.id] = [];
-        mapIndexCustomName[field.id] = "";
-        mapTouchedIndexCustom[field.id] = -1;
+        field.type = dat['type'];
+
+        if (field.type == "list") {
+          mapDatasCustomField[field.id] = [];
+          mapIndexCustomName[field.id] = "";
+          mapTouchedIndexCustom[field.id] = -1;
+          fields.add(field);
+        } else if (field.type == "number") {
+          mapDatasCustomFieldNumber[field.id] = [];
+          mapIndexCustomNumberName[field.id] = "";
+          mapTouchedIndexCustomNumber[field.id] = -1;
+          fieldsNumber.add(field);
+        }
       }
       if (fields.isNotEmpty) {
-        getCalculateCustomFieldChild(project, parentCategory, 0);
+        await getCalculateCustomFieldChild(project, parentCategory, 0);
+      }
+      if (fieldsNumber.isNotEmpty) {
+        await getCalculateCustomFieldNumberChild(project, parentCategory, 0);
       }
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
@@ -326,8 +345,77 @@ class _ChartScreenState extends State<ChartScreen> {
       }
       mapDatasCustomField[customField] = chartDatasCustomField;
       //chartColors = getColors(chartDatas.length);
+      // làm cái này để phải chờ xong mới gọi tiếp ??? --> for thì hay hơn, dễ hiểu
       if (fieldIndex < fields.length - 1) {
         getCalculateCustomFieldChild(project, parentCategory, fieldIndex + 1);
+      }
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  Future<void> getCalculateCustomFieldNumberChild(
+      String project, String parentCategory, int fieldIndex) async {
+    List<ChartData> chartDatasCustomFieldNumber = [];
+    String customField = fieldsNumber[fieldIndex].id;
+    setState(() {
+      isLoading = true;
+    });
+
+    // final prefs = await SharedPreferences.getInstance();
+    var url = "";
+    if (parentCategory != "") {
+      url =
+          'http://www.vietinrace.com/srvTD/getCalculateTasksCategoryCustomFieldNumber/' +
+              project +
+              "/" +
+              parentCategory +
+              "/" +
+              customField;
+      // + "/" + statuses;
+    } else {
+      url =
+          'http://www.vietinrace.com/srvTD/getCalculateTaskCustomFieldNumber/' +
+              project +
+              '/0/' +
+              customField +
+              "/" +
+              statuses;
+    }
+    final response = await http.get(Uri.parse(url));
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      int totalProfit = 0;
+      int totalTasks = 0;
+      for (var dat in data) {
+        ChartData chartData = ChartData();
+        chartData.name = dat['name'];
+        chartData.id = dat['id'];
+        chartData.total = int.parse(dat['total']);
+        chartData.profit = int.parse(dat[customField]);
+        totalProfit += chartData.profit;
+        totalTasks += chartData.total;
+        chartDatasCustomFieldNumber.add(chartData);
+      }
+
+      // cai nay bi lech ????
+      for (int i = 0; i < chartDatasCustomFieldNumber.length; i++) {
+        chartDatasCustomFieldNumber[i].percentTotal =
+            chartDatasCustomFieldNumber[i].total / totalTasks;
+        chartDatasCustomFieldNumber[i].percentProfit =
+            chartDatasCustomFieldNumber[i].profit / totalProfit;
+      }
+      mapDatasCustomFieldNumber[customField] = chartDatasCustomFieldNumber;
+      //chartColors = getColors(chartDatas.length);
+      if (fieldIndex < fieldsNumber.length - 1) {
+        getCalculateCustomFieldNumberChild(
+            project, parentCategory, fieldIndex + 1);
       }
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
@@ -546,6 +634,84 @@ class _ChartScreenState extends State<ChartScreen> {
     return card;
   }
 
+  Widget _buildChartCustomNumber() {
+    List<Widget> listChartCustomNumber = [];
+    for (int i = 0; i < fieldsNumber.length; i++) {
+      String customField = fieldsNumber[i].id;
+      listChartCustomNumber.add(Text(fieldsNumber[i].name));
+      listChartCustomNumber.add(const SizedBox(height: 10));
+
+      listChartCustomNumber.add(const SizedBox(height: 10));
+      listChartCustomNumber.add(Text(fieldsNumber[i].name));
+      listChartCustomNumber.add(_buildChartCustomItemNumber(0, customField));
+
+      listChartCustomNumber.add(const SizedBox(height: 10));
+      listChartCustomNumber.add(const Text('Số Công Việc'));
+      listChartCustomNumber.add(_buildChartCustomItemNumber(1, customField));
+    }
+    return Column(children: listChartCustomNumber);
+  }
+
+  Widget _buildChartCustomItemNumber(int option, String customField) {
+    Widget card = Card(
+      color: Colors.white,
+      child: Row(
+        children: <Widget>[
+          const SizedBox(
+            height: 18,
+          ),
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: PieChart(
+                PieChartData(
+                    pieTouchData: PieTouchData(
+                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                      setState(() {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse == null ||
+                            pieTouchResponse.touchedSection == null) {
+                          mapTouchedIndexCustomNumber[customField] = -1;
+                          return;
+                        }
+                        mapTouchedIndexCustomNumber[customField] =
+                            pieTouchResponse
+                                .touchedSection!.touchedSectionIndex;
+                        if (mapTouchedIndexCustomNumber[customField]! >= 0) {
+                          // showInSnackBar(
+                          //     mapTouchedIndexCustom[customField].toString());
+                          // categoryChooseName = chartDatas[touchedIndex].name;
+                          // categoryChooseId = chartDatas[touchedIndex].id;
+                        }
+                      });
+                    }),
+                    borderData: FlBorderData(
+                      show: false,
+                    ),
+                    sectionsSpace: 0,
+                    centerSpaceRadius: 40,
+                    sections: showingSectionsChartCustomFieldNumber(
+                        option, customField)),
+              ),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            // cho vào vòng lặp được này
+            children: showingIndicatorsCustomFieldNumber(customField),
+          ),
+          const SizedBox(
+            width: 28,
+          ),
+        ],
+      ),
+    );
+
+    return card;
+  }
+
   void _goToChildren() {
     //showInSnackBar(categoryChooseId);
     if (mapCategories[categoryChooseId]!.isParent == true) {
@@ -647,7 +813,7 @@ class _ChartScreenState extends State<ChartScreen> {
         const SizedBox(height: 10),
         const Text('Số Công Việc'),
         _buildChart(1),
-
+        _buildChartCustomNumber(),
         const Text('Custom Field'),
         _buildChartCustom(),
       ])),
@@ -733,6 +899,55 @@ class _ChartScreenState extends State<ChartScreen> {
         nameItem = mapDatasCustomField[customField]![i].total.toString();
       }
       final isTouched = i == mapTouchedIndexCustom[customField];
+      final fontSize = isTouched ? 25.0 : 16.0;
+      final radius = isTouched ? 60.0 : 50.0;
+      Color color = chooseColor(i);
+      PieChartSectionData sectionData = PieChartSectionData(
+        color: color,
+        value: valuePercent,
+        title: nameItem,
+        radius: radius,
+        titleStyle: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xffffffff)),
+      );
+      listPies.add(sectionData);
+    }
+    return listPies;
+  }
+
+  List<Widget> showingIndicatorsCustomFieldNumber(String customField) {
+    List<Widget> indicatorsCustomFieldNumber = [];
+    for (int i = 0; i < mapDatasCustomFieldNumber[customField]!.length; i++) {
+      indicatorsCustomFieldNumber.add(Indicator(
+        color: chooseColor(i),
+        text: mapDatasCustomFieldNumber[customField]![i].name,
+        isSquare: true,
+      ));
+
+      indicatorsCustomFieldNumber.add(const SizedBox(
+        height: 4,
+      ));
+    }
+    return indicatorsCustomFieldNumber;
+  }
+
+  List<PieChartSectionData> showingSectionsChartCustomFieldNumber(
+      int option, String customField) {
+    List<PieChartSectionData> listPies = [];
+    double valuePercent = 0;
+    String nameItem = "";
+
+    for (int i = 0; i < mapDatasCustomFieldNumber[customField]!.length; i++) {
+      if (option == 0) {
+        valuePercent = mapDatasCustomFieldNumber[customField]![i].percentProfit;
+        nameItem = mapDatasCustomFieldNumber[customField]![i].profit.toString();
+      } else {
+        valuePercent = mapDatasCustomFieldNumber[customField]![i].percentTotal;
+        nameItem = mapDatasCustomFieldNumber[customField]![i].total.toString();
+      }
+      final isTouched = i == mapTouchedIndexCustomNumber[customField];
       final fontSize = isTouched ? 25.0 : 16.0;
       final radius = isTouched ? 60.0 : 50.0;
       Color color = chooseColor(i);
