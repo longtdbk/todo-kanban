@@ -338,10 +338,18 @@ class _ChartScreenState extends State<ChartScreen> {
 
       // cai nay bi lech ????
       for (int i = 0; i < chartDatasCustomField.length; i++) {
-        chartDatasCustomField[i].percentTotal =
-            chartDatasCustomField[i].total / totalTasks;
-        chartDatasCustomField[i].percentProfit =
-            chartDatasCustomField[i].profit / totalProfit;
+        if (totalTasks == 0) {
+          chartDatasCustomField[i].percentTotal = 0;
+        } else {
+          chartDatasCustomField[i].percentTotal =
+              chartDatasCustomField[i].total / totalTasks;
+        }
+        if (totalProfit == 0) {
+          chartDatasCustomField[i].percentProfit = 0;
+        } else {
+          chartDatasCustomField[i].percentProfit =
+              chartDatasCustomField[i].profit / totalProfit;
+        }
       }
       mapDatasCustomField[customField] = chartDatasCustomField;
       //chartColors = getColors(chartDatas.length);
@@ -406,11 +414,14 @@ class _ChartScreenState extends State<ChartScreen> {
 
       // cai nay bi lech ????
       for (int i = 0; i < chartDatasCustomFieldNumber.length; i++) {
-        chartDatasCustomFieldNumber[i].percentTotal =
-            chartDatasCustomFieldNumber[i].total / totalTasks;
-        chartDatasCustomFieldNumber[i].percentProfit =
-            chartDatasCustomFieldNumber[i].profit / totalProfit;
+        chartDatasCustomFieldNumber[i].percentTotal = totalTasks == 0
+            ? 0
+            : chartDatasCustomFieldNumber[i].total / totalTasks;
+        chartDatasCustomFieldNumber[i].percentProfit = totalProfit == 0
+            ? 0
+            : chartDatasCustomFieldNumber[i].profit / totalProfit;
       }
+
       mapDatasCustomFieldNumber[customField] = chartDatasCustomFieldNumber;
       //chartColors = getColors(chartDatas.length);
       if (fieldIndex < fieldsNumber.length - 1) {
