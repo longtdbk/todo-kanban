@@ -533,13 +533,19 @@ class TaskListState extends State<TaskList> {
     for (int i = 0; i < taskStatuses.length; i++) {
       Widget w = Container(
           margin: const EdgeInsets.all(6.0),
+          // height: MediaQuery.of(context).size.height * 0.8,
           child: Column(children: [
             _buildHeadline('${taskStatuses[i].name}'),
             // const SizedBox(height: 4),
-            Container(
-              height: MediaQuery.of(context).size.height * 0.45,
+            // Container(
+            // child:
+            Expanded(
               child: ListView(
+                  // shrinkWrap: true,
                   padding: const EdgeInsets.symmetric(vertical: 8),
+                  // itemCount:  taskStatuses.length,
+                  // itemBuilder: (context, index) =>
+
                   children: [
                     // for (int index = 0; index < taskStatuses.length; index++)
                     //ProjectData project = (ProjectData)projects[i];
@@ -558,7 +564,7 @@ class TaskListState extends State<TaskList> {
                           subtitle: Text(tasksMap[taskStatuses[i].id][j].email),
                           trailing:
                               _createMenuTask(tasksMap[taskStatuses[i].id][j])),
-                    // }
+                    //   // }
                   ]),
             ),
             // )),
