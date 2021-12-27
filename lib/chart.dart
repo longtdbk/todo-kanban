@@ -202,7 +202,9 @@ class _ChartScreenState extends State<ChartScreen> {
         'http://www.vietinrace.com/srvTD/getCalculateTasksCategoriesChild/' +
             project +
             "/" +
-            parentCategory;
+            parentCategory +
+            "/" +
+            statuses;
     final response = await http.get(Uri.parse(url));
 
     setState(() {
