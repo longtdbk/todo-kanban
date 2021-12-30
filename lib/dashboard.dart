@@ -85,9 +85,11 @@ class _DashboardPageState extends State<DashboardPage> {
     _totalNotifications = 0;
     registerNotification();
     onMessageOpen();
+    getSharedPreference();
     buildTab();
+
     super.initState();
-    //getSharedPreference();
+    //
   }
 
   void getSharedPreference() async {
@@ -197,7 +199,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     //await getUserInfo();
-    getSharedPreference();
+
     final drawerHeader = UserAccountsDrawerHeader(
       accountName: const Text(
         'User Name',

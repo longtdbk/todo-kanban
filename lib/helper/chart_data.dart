@@ -5,6 +5,8 @@ class ChartData {
   double percentTotal = 0;
   int profit = 0;
   double percentProfit = 0;
+  int totalHasProfit = 0;
+  double percentTotalHasProfit = 0;
   //CategoriesData();
 }
 

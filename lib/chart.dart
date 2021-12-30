@@ -167,19 +167,24 @@ class _ChartScreenState extends State<ChartScreen> {
       var data = json['data'];
       int totalProfit = 0;
       int totalTasks = 0;
+      int totalHasProfit = 0;
       for (var dat in data) {
         ChartData chartData = ChartData();
         chartData.name = dat['name'];
         chartData.id = dat['id'];
         chartData.total = int.parse(dat['total']);
         chartData.profit = int.parse(dat['profit']);
+        chartData.totalHasProfit = int.parse(dat['total_profit']);
         totalProfit += chartData.profit;
         totalTasks += chartData.total;
+        totalHasProfit += chartData.totalHasProfit;
         chartDatas.add(chartData);
       }
       for (int i = 0; i < chartDatas.length; i++) {
         chartDatas[i].percentTotal = chartDatas[i].total / totalTasks;
         chartDatas[i].percentProfit = chartDatas[i].profit / totalProfit;
+        chartDatas[i].percentTotalHasProfit =
+            chartDatas[i].totalHasProfit / totalHasProfit;
       }
       chartColors = getColors(chartDatas.length);
 
@@ -215,19 +220,24 @@ class _ChartScreenState extends State<ChartScreen> {
       var data = json['data'];
       int totalProfit = 0;
       int totalTasks = 0;
+      int totalHasProfit = 0;
       for (var dat in data) {
         ChartData chartData = ChartData();
         chartData.name = dat['name'];
         chartData.id = dat['id'];
         chartData.total = int.parse(dat['total']);
         chartData.profit = int.parse(dat['profit']);
+        chartData.totalHasProfit = int.parse(dat['total_profit']);
         totalProfit += chartData.profit;
         totalTasks += chartData.total;
+        totalHasProfit += chartData.totalHasProfit;
         chartDatas.add(chartData);
       }
       for (int i = 0; i < chartDatas.length; i++) {
         chartDatas[i].percentTotal = chartDatas[i].total / totalTasks;
         chartDatas[i].percentProfit = chartDatas[i].profit / totalProfit;
+        chartDatas[i].percentTotalHasProfit =
+            chartDatas[i].totalHasprofit / totalHasProfit;
       }
       chartColors = getColors(chartDatas.length);
       getCustomFieldsProject(project, parentCategory);
@@ -510,8 +520,36 @@ class _ChartScreenState extends State<ChartScreen> {
       case 6:
         color = const Color(0xffdc34eb);
         break;
+      case 7:
+        color = const Color(0xffdd6b66);
+        break;
+      case 8:
+        color = const Color(0xff759aa0);
+        break;
+      case 9:
+        color = const Color(0xffe69d87);
+        break;
+      case 10:
+        color = const Color(0xff8dc1a9);
+        break;
+      case 11:
+        color = const Color(0xffea7e53);
+        break;
+      case 12:
+        color = const Color(0xffeedd78);
+        break;
+      case 13:
+        color = const Color(0xff73a373);
+        break;
+      case 14:
+        color = const Color(0xff73b9bc);
+        break;
+      case 15:
+        color = const Color(0xff7289ab);
+        break;
+
       default:
-        color = const Color(0xff34c3eb);
+        color = const Color(0xff91ca8c);
     }
     return color;
   }
@@ -578,12 +616,12 @@ class _ChartScreenState extends State<ChartScreen> {
       listChartCustom.add(const SizedBox(height: 10));
 
       listChartCustom.add(const SizedBox(height: 10));
-      listChartCustom.add(const Text('Lợi Ích (Triệu Đồng)'));
-      listChartCustom.add(_buildChartCustomItem(0, customField));
-
-      listChartCustom.add(const SizedBox(height: 10));
       listChartCustom.add(const Text('Số Công Việc'));
       listChartCustom.add(_buildChartCustomItem(1, customField));
+
+      listChartCustom.add(const SizedBox(height: 10));
+      listChartCustom.add(const Text('Lợi Ích (Triệu Đồng)'));
+      listChartCustom.add(_buildChartCustomItem(0, customField));
     }
     return Column(children: listChartCustom);
   }
@@ -820,12 +858,17 @@ class _ChartScreenState extends State<ChartScreen> {
               )
             : const Text(''),
         const SizedBox(height: 10),
-        const Text('Lợi Ích (Triệu Đồng)'),
-        // SizedBox(height: 10),
-        _buildChart(0),
-        const SizedBox(height: 10),
-        const Text('Số Công Việc'),
+        const Text('Số lượng công việc'),
         _buildChart(1),
+
+        const SizedBox(height: 10),
+        const Text('Số lượng công việc có Lợi ích'),
+        _buildChart(2),
+        // SizedBox(height: 10),
+
+        const SizedBox(height: 10),
+        const Text('Lợi ích (Triệu Đồng)'),
+        _buildChart(0),
         _buildChartCustomNumber(),
         const Text('Custom Field'),
         _buildChartCustom(),
@@ -858,9 +901,12 @@ class _ChartScreenState extends State<ChartScreen> {
       if (option == 0) {
         valuePercent = chartDatas[i].percentProfit;
         nameItem = chartDatas[i].profit.toString();
-      } else {
+      } else if (option == 1) {
         valuePercent = chartDatas[i].percentTotal;
         nameItem = chartDatas[i].total.toString();
+      } else if (option == 2) {
+        valuePercent = chartDatas[i].percentTotalHasProfit;
+        nameItem = chartDatas[i].totalHasProfit.toString();
       }
       final isTouched = i == touchedIndex;
       final fontSize = isTouched ? 25.0 : 16.0;

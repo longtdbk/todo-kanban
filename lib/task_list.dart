@@ -356,7 +356,7 @@ class TaskListState extends State<TaskList> {
     //Navigator.pop(context);
   }
 
-  Future<void> updateTaskID(TaskData taskData) async {
+  Future<void> updateTaskID(TaskData taskData, int option) async {
     setState(() {
       isLoading = true;
     });
@@ -381,7 +381,7 @@ class TaskListState extends State<TaskList> {
           'category': widget.categoryId!,
           'custom_fields': taskData.customFields,
           'start_date': taskData.dateStart,
-          // 'finish_date': '',
+          'finish_date': taskData.dateFinish,
           'finish_estimate_date': taskData.dateFinishEstimate,
           // 'type': ''
         });
@@ -394,7 +394,9 @@ class TaskListState extends State<TaskList> {
       // var status = json['data'][0]['status'];
       var msg = json['data'][0]['msg'];
       showInSnackBar(msg);
-      Navigator.pop(context);
+      if (option == 1) {
+        Navigator.pop(context);
+      }
       getProject();
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
@@ -595,7 +597,7 @@ class TaskListState extends State<TaskList> {
     taskData.description = description;
     taskData.name = name;
     taskData.profit = profit;
-    var outputFormat = DateFormat('dd/MM/yyyy');
+    var outputFormat = DateFormat('yyyy-MM-dd');
     // var birthDate = outputFormat.format(date);
     taskData.dateStart = outputFormat.format(dateStart);
     taskData.dateFinishEstimate = outputFormat.format(dateEstimate);
@@ -646,6 +648,14 @@ class TaskListState extends State<TaskList> {
             title: Text('Đổi trạng thái')));
     menu.add(menuItem2);
 
+    var menuItem4 = const PopupMenuItem<String>(
+      value: 'finish',
+      child: ListTile(
+          // leading: const Icon(Icons.visibility),
+          title: Text('Kết thúc công việc')),
+    );
+    menu.add(menuItem4);
+
     var menuItem3 = const PopupMenuItem<String>(
         value: 'view_log',
         child: ListTile(
@@ -662,6 +672,8 @@ class TaskListState extends State<TaskList> {
           {showBottomModalListLog(taskData.id)}
         else if (value == "change_status")
           {showBottomModalChangeStatus(taskData)}
+        else if (value == "finish")
+          {finishTask(taskData)}
       },
       itemBuilder: (context) => menu,
     );
@@ -921,7 +933,7 @@ class TaskListState extends State<TaskList> {
               child: const Text('Cập nhật'),
               onPressed: () {
                 taskData.status = statusChoice;
-                updateTaskID(taskData);
+                updateTaskID(taskData, 1);
                 // Navigator.of(context).pop();
               }),
     ]);
@@ -948,6 +960,13 @@ class TaskListState extends State<TaskList> {
 
   FutureOr onGoBack(dynamic value) {
     getProject();
+  }
+
+  void finishTask(TaskData taskData) {
+    var outputFormat = DateFormat('yyyy-MM-dd');
+    var today = DateTime.now();
+    taskData.dateFinish = outputFormat.format(today);
+    updateTaskID(taskData, 0);
   }
 
   @override
