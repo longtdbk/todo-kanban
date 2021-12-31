@@ -237,7 +237,7 @@ class _ChartScreenState extends State<ChartScreen> {
         chartDatas[i].percentTotal = chartDatas[i].total / totalTasks;
         chartDatas[i].percentProfit = chartDatas[i].profit / totalProfit;
         chartDatas[i].percentTotalHasProfit =
-            chartDatas[i].totalHasprofit / totalHasProfit;
+            chartDatas[i].totalHasProfit / totalHasProfit;
       }
       chartColors = getColors(chartDatas.length);
       getCustomFieldsProject(project, parentCategory);
@@ -496,6 +496,40 @@ class _ChartScreenState extends State<ChartScreen> {
     return hsls;
   }
 
+  Widget _buildHeadline(String headline) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
+    Widget buildDivider() => Container(
+          height: 2,
+          //color: Colors.grey.shade300,
+          color: Colors.lightBlue,
+        );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        const SizedBox(height: 16),
+        buildDivider(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Center(
+              child: Text(
+            headline,
+            // textAlign: TextAlign.center,
+            style: textTheme.bodyText1?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          )),
+        ),
+        buildDivider(),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
   Color chooseColor(int i) {
     Color color = const Color(0xff0293ee);
     switch (i) {
@@ -612,7 +646,9 @@ class _ChartScreenState extends State<ChartScreen> {
     List<Widget> listChartCustom = [];
     for (int i = 0; i < fields.length; i++) {
       String customField = fields[i].id;
-      listChartCustom.add(Text(fields[i].name));
+
+      listChartCustom.add(_buildHeadline(fields[i].name));
+      // listChartCustom.add(Text(fields[i].name));
       listChartCustom.add(const SizedBox(height: 10));
 
       listChartCustom.add(const SizedBox(height: 10));
@@ -689,16 +725,19 @@ class _ChartScreenState extends State<ChartScreen> {
     List<Widget> listChartCustomNumber = [];
     for (int i = 0; i < fieldsNumber.length; i++) {
       String customField = fieldsNumber[i].id;
-      listChartCustomNumber.add(Text(fieldsNumber[i].name));
+      // listChartCustomNumber.add(Text(fieldsNumber[i].name));
+      listChartCustomNumber.add(_buildHeadline(fieldsNumber[i].name));
       listChartCustomNumber.add(const SizedBox(height: 10));
+
+      // listChartCustomNumber.add(const SizedBox(height: 10));
+      listChartCustomNumber.add(_buildHeadline('Số Công Việc'));
+
+      // listChartCustomNumber.add(const Text('Số Công Việc'));
+      listChartCustomNumber.add(_buildChartCustomItemNumber(1, customField));
 
       listChartCustomNumber.add(const SizedBox(height: 10));
       listChartCustomNumber.add(Text(fieldsNumber[i].name));
       listChartCustomNumber.add(_buildChartCustomItemNumber(0, customField));
-
-      listChartCustomNumber.add(const SizedBox(height: 10));
-      listChartCustomNumber.add(const Text('Số Công Việc'));
-      listChartCustomNumber.add(_buildChartCustomItemNumber(1, customField));
     }
     return Column(children: listChartCustomNumber);
   }
@@ -870,7 +909,7 @@ class _ChartScreenState extends State<ChartScreen> {
         const Text('Lợi ích (Triệu Đồng)'),
         _buildChart(0),
         _buildChartCustomNumber(),
-        const Text('Custom Field'),
+        // const Text('Custom Field'),
         _buildChartCustom(),
       ])),
     );
