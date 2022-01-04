@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 import 'chart_tab.dart';
 import 'helper/categories_data.dart';
@@ -13,6 +15,7 @@ import 'helper/chart_data.dart';
 import 'helper/custom_field_data.dart';
 import 'helper/task_status_data.dart';
 import 'indicator.dart';
+import 'util/bottom_picker_custom.dart';
 
 class ChartScreen extends StatefulWidget {
   final String? projectId;
@@ -56,9 +59,19 @@ class _ChartScreenState extends State<ChartScreen> {
 
   bool isLoading = false;
 
+  DateTime dateFrom = DateTime.now();
+  DateTime dateTo = DateTime.now();
+
   @override
   void initState() {
     super.initState();
+
+    String dateStr = DateFormat("yyyy-MM-dd").format(DateTime.now());
+    String year = dateStr.split("-")[0];
+    String beginYearDateString = year + "-" + "01-01";
+    String endYearDateString = year + "-" + "12-31";
+    dateFrom = DateFormat("yyyy-MM-dd").parse(beginYearDateString);
+    dateTo = DateFormat("yyyy-MM-dd").parse(endYearDateString);
 
     getTaskStatus();
   }
@@ -148,6 +161,9 @@ class _ChartScreenState extends State<ChartScreen> {
     setState(() {
       isLoading = true;
     });
+    var outputFormat = DateFormat('yyyy-MM-dd');
+    var dateToStr = outputFormat.format(dateTo);
+    var dateFromStr = outputFormat.format(dateFrom);
 
     // final prefs = await SharedPreferences.getInstance();
 
@@ -156,7 +172,11 @@ class _ChartScreenState extends State<ChartScreen> {
         "/" +
         level.toString() +
         "/" +
-        statuses;
+        statuses +
+        "/" +
+        dateFromStr +
+        "/" +
+        dateToStr;
     final response = await http.get(Uri.parse(url));
 
     setState(() {
@@ -202,6 +222,9 @@ class _ChartScreenState extends State<ChartScreen> {
     });
 
     // final prefs = await SharedPreferences.getInstance();
+    var outputFormat = DateFormat('yyyy-MM-dd');
+    var dateToStr = outputFormat.format(dateTo);
+    var dateFromStr = outputFormat.format(dateFrom);
 
     var url =
         'http://www.vietinrace.com/srvTD/getCalculateTasksCategoriesChild/' +
@@ -209,7 +232,11 @@ class _ChartScreenState extends State<ChartScreen> {
             "/" +
             parentCategory +
             "/" +
-            statuses;
+            statuses +
+            "/" +
+            dateFromStr +
+            "/" +
+            dateToStr;
     final response = await http.get(Uri.parse(url));
 
     setState(() {
@@ -383,6 +410,9 @@ class _ChartScreenState extends State<ChartScreen> {
     });
 
     // final prefs = await SharedPreferences.getInstance();
+    var outputFormat = DateFormat('yyyy-MM-dd');
+    var dateToStr = outputFormat.format(dateTo);
+    var dateFromStr = outputFormat.format(dateFrom);
     var url = "";
     if (parentCategory != "") {
       url =
@@ -391,8 +421,13 @@ class _ChartScreenState extends State<ChartScreen> {
               "/" +
               parentCategory +
               "/" +
-              customField;
-      // + "/" + statuses;
+              customField +
+              "/" +
+              statuses +
+              "/" +
+              dateFromStr +
+              "/" +
+              dateToStr;
     } else {
       url =
           'http://www.vietinrace.com/srvTD/getCalculateTaskCustomFieldNumber/' +
@@ -400,7 +435,11 @@ class _ChartScreenState extends State<ChartScreen> {
               '/0/' +
               customField +
               "/" +
-              statuses;
+              statuses +
+              "/" +
+              dateFromStr +
+              "/" +
+              dateToStr;
     }
     final response = await http.get(Uri.parse(url));
     if (mounted) {
@@ -632,7 +671,7 @@ class _ChartScreenState extends State<ChartScreen> {
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
             // cho vào vòng lặp được này
-            children: showingIndicators(),
+            children: showingIndicators(option),
           ),
           const SizedBox(
             width: 28,
@@ -709,7 +748,7 @@ class _ChartScreenState extends State<ChartScreen> {
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
             // cho vào vòng lặp được này
-            children: showingIndicatorsCustomField(customField),
+            children: showingIndicatorsCustomField(option, customField),
           ),
           const SizedBox(
             width: 28,
@@ -790,7 +829,7 @@ class _ChartScreenState extends State<ChartScreen> {
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
             // cho vào vòng lặp được này
-            children: showingIndicatorsCustomFieldNumber(customField),
+            children: showingIndicatorsCustomFieldNumber(option, customField),
           ),
           const SizedBox(
             width: 28,
@@ -875,6 +914,19 @@ class _ChartScreenState extends State<ChartScreen> {
     }
   }
 
+  Widget _chooseDateTime() {
+    List<Widget> listDateTimes = [];
+    listDateTimes.add(_buildDatePicker(context, 'Từ Ngày', 1));
+    listDateTimes.add(_buildDatePicker(context, 'Đến Ngày', 2));
+    listDateTimes.add(isLoading
+        ? const LinearProgressIndicator()
+        : ElevatedButton(
+            onPressed: getAllCategories,
+            child: const Text('Làm mới dữ liệu'),
+          ));
+    return Column(children: listDateTimes);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -888,6 +940,7 @@ class _ChartScreenState extends State<ChartScreen> {
           //aspectRatio: 1.3,
           child: Column(children: [
         _chooseStatus(),
+        _chooseDateTime(),
         // categoryChooseName != "" ? Text(categoryChooseName) : Text(''),
         // mapCategories[categoryChooseId]!.isParent == true
         categoryChooseId != ""
@@ -915,18 +968,22 @@ class _ChartScreenState extends State<ChartScreen> {
     );
   }
 
-  List<Widget> showingIndicators() {
+  List<Widget> showingIndicators(int option) {
     List<Widget> indicators = [];
     for (int i = 0; i < chartDatas.length; i++) {
-      indicators.add(Indicator(
-        color: chooseColor(i),
-        text: chartDatas[i].name,
-        isSquare: true,
-      ));
+      if ((option == 0 && chartDatas[i].percentProfit > 0) ||
+          (option == 1 && chartDatas[i].percentTotal > 0) ||
+          ((option == 2 && chartDatas[i].percentTotalHasProfit > 0))) {
+        indicators.add(Indicator(
+          color: chooseColor(i),
+          text: chartDatas[i].name,
+          isSquare: true,
+        ));
 
-      indicators.add(const SizedBox(
-        height: 4,
-      ));
+        indicators.add(const SizedBox(
+          height: 4,
+        ));
+      }
     }
     return indicators;
   }
@@ -947,6 +1004,12 @@ class _ChartScreenState extends State<ChartScreen> {
         valuePercent = chartDatas[i].percentTotalHasProfit;
         nameItem = chartDatas[i].totalHasProfit.toString();
       }
+
+      if (nameItem.length >= 4 && nameItem.length <= 6) {
+        nameItem = (double.parse(nameItem) / 1000).toStringAsFixed(2) + "K";
+      } else if (nameItem.length > 6) {
+        nameItem = (double.parse(nameItem) / 1000000).toStringAsFixed(2) + "M";
+      }
       final isTouched = i == touchedIndex;
       final fontSize = isTouched ? 25.0 : 16.0;
       final radius = isTouched ? 60.0 : 50.0;
@@ -966,18 +1029,24 @@ class _ChartScreenState extends State<ChartScreen> {
     return listPies;
   }
 
-  List<Widget> showingIndicatorsCustomField(String customField) {
+  List<Widget> showingIndicatorsCustomField(int option, String customField) {
     List<Widget> indicatorsCustomField = [];
-    for (int i = 0; i < mapDatasCustomField[customField]!.length; i++) {
-      indicatorsCustomField.add(Indicator(
-        color: chooseColor(i),
-        text: mapDatasCustomField[customField]![i].name,
-        isSquare: true,
-      ));
 
-      indicatorsCustomField.add(const SizedBox(
-        height: 4,
-      ));
+    for (int i = 0; i < mapDatasCustomField[customField]!.length; i++) {
+      if ((option == 0 &&
+              mapDatasCustomField[customField]![i].percentProfit > 0) ||
+          (option == 1 &&
+              mapDatasCustomField[customField]![i].percentTotal > 0)) {
+        indicatorsCustomField.add(Indicator(
+          color: chooseColor(i),
+          text: mapDatasCustomField[customField]![i].name,
+          isSquare: true,
+        ));
+
+        indicatorsCustomField.add(const SizedBox(
+          height: 4,
+        ));
+      }
     }
     return indicatorsCustomField;
   }
@@ -996,6 +1065,13 @@ class _ChartScreenState extends State<ChartScreen> {
         valuePercent = mapDatasCustomField[customField]![i].percentTotal;
         nameItem = mapDatasCustomField[customField]![i].total.toString();
       }
+
+      if (nameItem.length >= 4 && nameItem.length <= 6) {
+        nameItem = (double.parse(nameItem) / 1000).toStringAsFixed(2) + "K";
+      } else if (nameItem.length > 6) {
+        nameItem = (double.parse(nameItem) / 1000000).toStringAsFixed(2) + "M";
+      }
+
       final isTouched = i == mapTouchedIndexCustom[customField];
       final fontSize = isTouched ? 25.0 : 16.0;
       final radius = isTouched ? 60.0 : 50.0;
@@ -1015,18 +1091,24 @@ class _ChartScreenState extends State<ChartScreen> {
     return listPies;
   }
 
-  List<Widget> showingIndicatorsCustomFieldNumber(String customField) {
+  List<Widget> showingIndicatorsCustomFieldNumber(
+      int option, String customField) {
     List<Widget> indicatorsCustomFieldNumber = [];
     for (int i = 0; i < mapDatasCustomFieldNumber[customField]!.length; i++) {
-      indicatorsCustomFieldNumber.add(Indicator(
-        color: chooseColor(i),
-        text: mapDatasCustomFieldNumber[customField]![i].name,
-        isSquare: true,
-      ));
+      if ((option == 0 &&
+              mapDatasCustomFieldNumber[customField]![i].percentProfit > 0) ||
+          (option == 1 &&
+              mapDatasCustomFieldNumber[customField]![i].percentTotal > 0)) {
+        indicatorsCustomFieldNumber.add(Indicator(
+          color: chooseColor(i),
+          text: mapDatasCustomFieldNumber[customField]![i].name,
+          isSquare: true,
+        ));
 
-      indicatorsCustomFieldNumber.add(const SizedBox(
-        height: 4,
-      ));
+        indicatorsCustomFieldNumber.add(const SizedBox(
+          height: 4,
+        ));
+      }
     }
     return indicatorsCustomFieldNumber;
   }
@@ -1045,6 +1127,12 @@ class _ChartScreenState extends State<ChartScreen> {
         valuePercent = mapDatasCustomFieldNumber[customField]![i].percentTotal;
         nameItem = mapDatasCustomFieldNumber[customField]![i].total.toString();
       }
+      if (nameItem.length >= 4 && nameItem.length <= 6) {
+        nameItem = (double.parse(nameItem) / 1000).toStringAsFixed(2) + "K";
+      } else if (nameItem.length > 6) {
+        nameItem = (double.parse(nameItem) / 1000000).toStringAsFixed(2) + "M";
+      }
+
       final isTouched = i == mapTouchedIndexCustomNumber[customField];
       final fontSize = isTouched ? 25.0 : 16.0;
       final radius = isTouched ? 60.0 : 50.0;
@@ -1062,5 +1150,69 @@ class _ChartScreenState extends State<ChartScreen> {
       listPies.add(sectionData);
     }
     return listPies;
+  }
+
+  void _showPicker({
+    @required BuildContext? context,
+    @required Widget? child,
+  }) {
+    final themeData = CupertinoTheme.of(context!);
+    final dialogBody = CupertinoTheme(
+      data: themeData,
+      child: child!,
+    );
+
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (context) => dialogBody,
+    );
+  }
+
+  Widget _buildDatePicker(BuildContext context, String title, int option) {
+    DateTime date = DateTime.now();
+
+    // var outputFormat = DateFormat('dd/MM/yyyy');
+    //taskData.dateStart = outputFormat.format(dateStart);
+
+    if (option == 1) {
+      date = dateFrom;
+    } else if (option == 2) {
+      date = dateTo;
+    }
+    // if (dateText != "") {
+    //   date = DateTime.parse(dateText);
+    // }
+
+    return GestureDetector(
+      onTap: () {
+        _showPicker(
+          context: context,
+          child: BottomPickerCustom(
+            child: CupertinoDatePicker(
+              backgroundColor:
+                  CupertinoColors.systemBackground.resolveFrom(context),
+              mode: CupertinoDatePickerMode.date,
+              initialDateTime: date,
+              onDateTimeChanged: (newDateTime) {
+                setState(() => {
+                      if (option == 1)
+                        {dateFrom = newDateTime}
+                      else if (option == 2)
+                        {dateTo = newDateTime}
+                    });
+              },
+            ),
+          ),
+        );
+      },
+      child: MenuPickerCustom(children: [
+        //const Icon(Icons.access_time_outlined),
+        Text(title),
+        Text(
+          DateFormat.yMMMMd().format(date),
+          style: const TextStyle(color: CupertinoColors.inactiveGray),
+        ),
+      ]),
+    );
   }
 }

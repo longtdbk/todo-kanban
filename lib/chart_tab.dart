@@ -4,6 +4,7 @@ import 'package:kanban_dashboard/chart.dart';
 
 // import 'helper/chart_data.dart';
 // import 'indicator.dart';
+import 'bar_chart.dart';
 import 'line_chart.dart';
 
 class TabChartPage extends StatefulWidget {
@@ -49,6 +50,8 @@ class TabChartPageState extends State<TabChartPage> {
         categoryId: widget.categoryId,
         title: widget.title,
         year: widget.year));
+
+    _listBody.add(BarChartSample());
   }
 
   @override
@@ -75,6 +78,11 @@ class TabChartPageState extends State<TabChartPage> {
             BottomNavigationBarItem(
               icon: Icon(Icons.show_chart),
               label: 'Line Chart ',
+              backgroundColor: Colors.green,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart),
+              label: 'Bar Chart ',
               backgroundColor: Colors.green,
             ),
           ],
