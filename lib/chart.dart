@@ -208,7 +208,7 @@ class _ChartScreenState extends State<ChartScreen> {
       }
       chartColors = getColors(chartDatas.length);
 
-      getCustomFieldsProject(project, "");
+      await getCustomFieldsProject(project, "");
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
@@ -267,15 +267,17 @@ class _ChartScreenState extends State<ChartScreen> {
             chartDatas[i].totalHasProfit / totalHasProfit;
       }
       chartColors = getColors(chartDatas.length);
-      getCustomFieldsProject(project, parentCategory);
+      await getCustomFieldsProject(project, parentCategory);
     } else {
-      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+      showInSnackBar(
+          "Có lỗi xảy ra , có thể do kết nối mạng phần dữ liệu chính!");
     }
   }
 
   Future<void> getCustomFieldsProject(
       String project, String parentCategory) async {
     fields = [];
+    fieldsNumber = [];
     setState(() {
       isLoading = true;
     });
@@ -353,23 +355,24 @@ class _ChartScreenState extends State<ChartScreen> {
           "/" +
           customField;
     }
-    final response = await http.get(Uri.parse(url));
+    final responseCF = await http.get(Uri.parse(url));
     if (mounted) {
       setState(() {
         isLoading = false;
       });
     }
-    if (response.statusCode == 200) {
-      var json = jsonDecode(response.body);
-      var data = json['data'];
+    if (responseCF.statusCode == 200) {
+      var jsonCF = jsonDecode(responseCF.body);
+      var dataCustomField = jsonCF['data'];
       int totalProfit = 0;
       int totalTasks = 0;
-      for (var dat in data) {
+      for (var datCF in dataCustomField) {
         ChartData chartData = ChartData();
-        chartData.name = dat['name'];
-        chartData.id = dat['id'];
-        chartData.total = int.parse(dat['total']);
-        chartData.profit = int.parse(dat['profit']);
+        chartData.name = datCF['name'];
+        chartData.id = datCF['id'];
+        chartData.total = int.parse(datCF['total']);
+        chartData.profit =
+            datCF['profit'] == 'undefined' ? 0 : int.parse(datCF['profit']);
         totalProfit += chartData.profit;
         totalTasks += chartData.total;
         chartDatasCustomField.add(chartData);
@@ -397,7 +400,8 @@ class _ChartScreenState extends State<ChartScreen> {
         getCalculateCustomFieldChild(project, parentCategory, fieldIndex + 1);
       }
     } else {
-      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+      showInSnackBar(
+          "Có lỗi xảy ra , có thể do kết nối mạng phần dữ liệu tùy biến !");
     }
   }
 
@@ -441,23 +445,25 @@ class _ChartScreenState extends State<ChartScreen> {
               "/" +
               dateToStr;
     }
-    final response = await http.get(Uri.parse(url));
+    final responseNb = await http.get(Uri.parse(url));
     if (mounted) {
       setState(() {
         isLoading = false;
       });
     }
-    if (response.statusCode == 200) {
-      var json = jsonDecode(response.body);
-      var data = json['data'];
+    if (responseNb.statusCode == 200) {
+      var jsonNb = jsonDecode(responseNb.body);
+      var dataNumber = jsonNb['data'];
       int totalProfit = 0;
       int totalTasks = 0;
-      for (var dat in data) {
+      for (var datNb in dataNumber) {
         ChartData chartData = ChartData();
-        chartData.name = dat['name'];
-        chartData.id = dat['id'];
-        chartData.total = int.parse(dat['total']);
-        chartData.profit = int.parse(dat[customField]);
+        chartData.name = datNb['name'];
+        chartData.id = datNb['id'];
+        chartData.total = int.parse(datNb['total']);
+        chartData.profit = datNb[customField] == 'undefined'
+            ? 0
+            : int.parse(datNb[customField]);
         totalProfit += chartData.profit;
         totalTasks += chartData.total;
         chartDatasCustomFieldNumber.add(chartData);
@@ -480,7 +486,8 @@ class _ChartScreenState extends State<ChartScreen> {
             project, parentCategory, fieldIndex + 1);
       }
     } else {
-      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+      showInSnackBar(
+          "Có lỗi xảy ra , có thể do kết nối mạng phần lấy dữ liệu trường số !");
     }
   }
 
@@ -661,7 +668,7 @@ class _ChartScreenState extends State<ChartScreen> {
                       show: false,
                     ),
                     sectionsSpace: 0,
-                    centerSpaceRadius: 40,
+                    centerSpaceRadius: 30,
                     sections: showingSectionsChart(option)),
               ),
             ),
@@ -818,7 +825,7 @@ class _ChartScreenState extends State<ChartScreen> {
                       show: false,
                     ),
                     sectionsSpace: 0,
-                    centerSpaceRadius: 40,
+                    centerSpaceRadius: 0,
                     sections: showingSectionsChartCustomFieldNumber(
                         option, customField)),
               ),
@@ -1011,7 +1018,7 @@ class _ChartScreenState extends State<ChartScreen> {
         nameItem = (double.parse(nameItem) / 1000000).toStringAsFixed(2) + "M";
       }
       final isTouched = i == touchedIndex;
-      final fontSize = isTouched ? 25.0 : 16.0;
+      final fontSize = isTouched ? 25.0 : 13.0;
       final radius = isTouched ? 60.0 : 50.0;
       Color color = chooseColor(i);
       PieChartSectionData sectionData = PieChartSectionData(
@@ -1073,7 +1080,7 @@ class _ChartScreenState extends State<ChartScreen> {
       }
 
       final isTouched = i == mapTouchedIndexCustom[customField];
-      final fontSize = isTouched ? 25.0 : 16.0;
+      final fontSize = isTouched ? 25.0 : 13.0;
       final radius = isTouched ? 60.0 : 50.0;
       Color color = chooseColor(i);
       PieChartSectionData sectionData = PieChartSectionData(
@@ -1134,7 +1141,7 @@ class _ChartScreenState extends State<ChartScreen> {
       }
 
       final isTouched = i == mapTouchedIndexCustomNumber[customField];
-      final fontSize = isTouched ? 25.0 : 16.0;
+      final fontSize = isTouched ? 25.0 : 13.0;
       final radius = isTouched ? 60.0 : 50.0;
       Color color = chooseColor(i);
       PieChartSectionData sectionData = PieChartSectionData(

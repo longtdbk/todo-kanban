@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'helper/chart_data.dart';
+import 'helper/task_status_data.dart';
 import 'indicator.dart';
 
 class LineChartPage extends StatefulWidget {
@@ -28,6 +29,10 @@ class LineChartPageState extends State<LineChartPage> {
   List<String> names = [];
   HashMap<String, List<FlSpot>> spotsMonthTotal = HashMap();
   HashMap<String, List<FlSpot>> spotsMonthProfit = HashMap();
+
+  List<TaskStatusData> taskStatuses = [];
+  String statuses = '';
+  List<bool> checkStatuses = [];
 
   void showInSnackBar(String value) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -140,6 +145,41 @@ class LineChartPageState extends State<LineChartPage> {
         },
       );
 
+  Future<void> getTaskStatus() async {
+    taskStatuses = [];
+    setState(() {
+      isLoading = true;
+    });
+
+    // final prefs = await SharedPreferences.getInstance();
+
+    var url =
+        'http://www.vietinrace.com/srvTD/getTaskStatus/' + widget.projectId!;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        TaskStatusData taskStatus = TaskStatusData(
+            id: dat['id'],
+            name: dat['name'],
+            shortName: dat['name'],
+            code: dat['code']);
+        taskStatuses.add(taskStatus);
+        statuses += taskStatus.id + "-";
+        checkStatuses.add(true);
+      }
+      statuses = statuses.substring(0, statuses.length - 1);
+      getCalculateTasksMonth();
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
   Future<void> getCalculateTasksMonth() async {
     chartDataMonths = [];
     setState(() {
@@ -153,7 +193,9 @@ class LineChartPageState extends State<LineChartPage> {
           'http://www.vietinrace.com/srvTD/getCalculateTasksCategoriesMonths/' +
               widget.projectId! +
               '/0/' +
-              widget.year!;
+              widget.year! +
+              '/' +
+              statuses;
     } else {
       url =
           'http://www.vietinrace.com/srvTD/getCalculateTasksCategoriesChildMonths/' +
@@ -161,7 +203,9 @@ class LineChartPageState extends State<LineChartPage> {
               '/' +
               widget.categoryId! +
               '/' +
-              widget.year!;
+              widget.year! +
+              '/' +
+              statuses;
     }
 
     final response = await http.get(Uri.parse(url));
@@ -304,11 +348,67 @@ class LineChartPageState extends State<LineChartPage> {
     return indicators;
   }
 
+  Widget _chooseStatus() {
+    List<Widget> listStatuses = [];
+
+    if (taskStatuses.length > 4) {
+      int rows = taskStatuses.length ~/ 4 + 1;
+      for (int i = 0; i < rows; i++) {
+        List<Widget> listStatusesRow = [];
+        for (int j = 4 * i; j < 4 + 4 * i; j++) {
+          Checkbox checkBox = Checkbox(
+              value: checkStatuses[j],
+              onChanged: (value) {
+                setState(() {
+                  checkStatuses[j] = value!;
+                  if (checkStatuses[j]) {
+                    statuses = statuses + "-" + taskStatuses[j].id;
+                  } else {
+                    statuses = statuses.replaceAll(taskStatuses[j].id, "");
+                  }
+                  statuses = statuses.replaceAll("--", "-");
+                  getCalculateTasksMonth();
+                });
+              });
+          listStatusesRow.add(checkBox);
+          listStatusesRow.add(Text(taskStatuses[i].name));
+          listStatusesRow.add(const SizedBox(width: 10));
+        }
+        Row row = Row(children: listStatusesRow);
+        listStatuses.add(row);
+        //listStatuses.add(const SizedBox(height: 10));
+      }
+      return Column(children: listStatuses);
+    } else {
+      for (int i = 0; i < taskStatuses.length; i++) {
+        Checkbox checkBox = Checkbox(
+            value: checkStatuses[i],
+            onChanged: (value) {
+              setState(() {
+                checkStatuses[i] = value!;
+                if (checkStatuses[i]) {
+                  statuses = statuses + "-" + taskStatuses[i].id;
+                } else {
+                  statuses = statuses.replaceAll(taskStatuses[i].id, "");
+                }
+                statuses = statuses.replaceAll("--", "-");
+                getCalculateTasksMonth();
+              });
+            });
+        listStatuses.add(checkBox);
+        listStatuses.add(Text(taskStatuses[i].name));
+        listStatuses.add(const SizedBox(width: 10));
+      }
+      Row row = Row(children: listStatuses);
+      return row;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     isShowingTotalTask = true;
-    getCalculateTasksMonth();
+    getTaskStatus();
   }
 
   Widget _createLineChart() {
@@ -405,6 +505,7 @@ class LineChartPageState extends State<LineChartPage> {
           color: const Color(0xffffffff),
           child: ListView(
             children: <Widget>[
+              _chooseStatus(),
               const SizedBox(
                 height: 8,
               ),
