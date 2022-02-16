@@ -17,21 +17,21 @@ import 'helper/task_status_data.dart';
 import 'indicator.dart';
 import 'util/bottom_picker_custom.dart';
 
-class ChartScreen extends StatefulWidget {
+class ChartSameCodeScreen extends StatefulWidget {
   final String? projectId;
   final String? title;
   final String? categoryId;
   final String? year;
-  const ChartScreen(
+  const ChartSameCodeScreen(
       {Key? key, this.projectId, this.categoryId, this.title, this.year})
       : super(key: key);
 
   @override
   // _DashboardPageState2 createState() => _DashboardPageState2();
-  _ChartScreenState createState() => _ChartScreenState();
+  _ChartSameCodeScreenState createState() => _ChartSameCodeScreenState();
 }
 
-class _ChartScreenState extends State<ChartScreen>
+class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     with AutomaticKeepAliveClientMixin {
   int touchedIndex = -1; // giá trị để làm việc đây :)
   String categoryChooseName = ""; // category goc :)
@@ -77,7 +77,6 @@ class _ChartScreenState extends State<ChartScreen>
     if (taskStatuses.isEmpty) {
       getTaskStatus();
     }
-    // getTaskStatus();
   }
 
   void showInSnackBar(String value) {
@@ -151,7 +150,7 @@ class _ChartScreenState extends State<ChartScreen>
       }
 
       if (widget.categoryId!.isEmpty) {
-        getAllCategoriesProject(widget.projectId!, 0);
+        getAllCategoriesSameNameProject(widget.projectId!, 1);
       } else {
         getAllCategoriesChild(widget.projectId!, widget.categoryId!);
       }
@@ -160,7 +159,8 @@ class _ChartScreenState extends State<ChartScreen>
     }
   }
 
-  Future<void> getAllCategoriesProject(String project, int level) async {
+  Future<void> getAllCategoriesSameNameProject(
+      String project, int level) async {
     chartDatas = [];
     setState(() {
       isLoading = true;
@@ -170,71 +170,12 @@ class _ChartScreenState extends State<ChartScreen>
     var dateFromStr = outputFormat.format(dateFrom);
 
     // final prefs = await SharedPreferences.getInstance();
-
-    var url = 'http://www.vietinrace.com/srvTD/getCalculateTasksCategories/' +
-        project +
-        "/" +
-        level.toString() +
-        "/" +
-        statuses +
-        "/" +
-        dateFromStr +
-        "/" +
-        dateToStr;
-    final response = await http.get(Uri.parse(url));
-
-    setState(() {
-      isLoading = false;
-    });
-    if (response.statusCode == 200) {
-      var json = jsonDecode(response.body);
-      var data = json['data'];
-      int totalProfit = 0;
-      int totalTasks = 0;
-      int totalHasProfit = 0;
-      for (var dat in data) {
-        ChartData chartData = ChartData();
-        chartData.name = dat['name'];
-        chartData.id = dat['id'];
-        chartData.total = int.parse(dat['total']);
-        chartData.profit = int.parse(dat['profit']);
-        chartData.totalHasProfit = int.parse(dat['total_profit']);
-        totalProfit += chartData.profit;
-        totalTasks += chartData.total;
-        totalHasProfit += chartData.totalHasProfit;
-        chartDatas.add(chartData);
-      }
-      for (int i = 0; i < chartDatas.length; i++) {
-        chartDatas[i].percentTotal = chartDatas[i].total / totalTasks;
-        chartDatas[i].percentProfit = chartDatas[i].profit / totalProfit;
-        chartDatas[i].percentTotalHasProfit =
-            chartDatas[i].totalHasProfit / totalHasProfit;
-      }
-      chartColors = getColors(chartDatas.length);
-
-      await getCustomFieldsProject(project, "");
-    } else {
-      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
-    }
-  }
-
-  Future<void> getAllCategoriesChild(
-      String project, String parentCategory) async {
-    chartDatas = [];
-    setState(() {
-      isLoading = true;
-    });
-
-    // final prefs = await SharedPreferences.getInstance();
-    var outputFormat = DateFormat('yyyy-MM-dd');
-    var dateToStr = outputFormat.format(dateTo);
-    var dateFromStr = outputFormat.format(dateFrom);
 
     var url =
-        'http://www.vietinrace.com/srvTD/getCalculateTasksCategoriesChild/' +
+        'http://www.vietinrace.com/srvTD/getCalculateTasksCategoriesSameName/' +
             project +
             "/" +
-            parentCategory +
+            level.toString() +
             "/" +
             statuses +
             "/" +
@@ -271,7 +212,66 @@ class _ChartScreenState extends State<ChartScreen>
             chartDatas[i].totalHasProfit / totalHasProfit;
       }
       chartColors = getColors(chartDatas.length);
-      await getCustomFieldsProject(project, parentCategory);
+
+      // await getCustomFieldsProject(project, "");
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  Future<void> getAllCategoriesChild(String project, String category) async {
+    chartDatas = [];
+    setState(() {
+      isLoading = true;
+    });
+
+    // final prefs = await SharedPreferences.getInstance();
+    var outputFormat = DateFormat('yyyy-MM-dd');
+    var dateToStr = outputFormat.format(dateTo);
+    var dateFromStr = outputFormat.format(dateFrom);
+
+    var url =
+        'http://www.vietinrace.com/srvTD/getCalculateTasksCategoriesChildSameName/' +
+            project +
+            "/" +
+            category +
+            "/" +
+            statuses +
+            "/" +
+            dateFromStr +
+            "/" +
+            dateToStr;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      int totalProfit = 0;
+      int totalTasks = 0;
+      int totalHasProfit = 0;
+      for (var dat in data) {
+        ChartData chartData = ChartData();
+        chartData.name = dat['name'];
+        chartData.id = dat['id'];
+        chartData.total = int.parse(dat['total']);
+        chartData.profit = int.parse(dat['profit']);
+        chartData.totalHasProfit = int.parse(dat['total_profit']);
+        totalProfit += chartData.profit;
+        totalTasks += chartData.total;
+        totalHasProfit += chartData.totalHasProfit;
+        chartDatas.add(chartData);
+      }
+      for (int i = 0; i < chartDatas.length; i++) {
+        chartDatas[i].percentTotal = chartDatas[i].total / totalTasks;
+        chartDatas[i].percentProfit = chartDatas[i].profit / totalProfit;
+        chartDatas[i].percentTotalHasProfit =
+            chartDatas[i].totalHasProfit / totalHasProfit;
+      }
+      chartColors = getColors(chartDatas.length);
+      await getCustomFieldsProject(project, category);
     } else {
       showInSnackBar(
           "Có lỗi xảy ra , có thể do kết nối mạng phần dữ liệu chính!");
@@ -879,19 +879,19 @@ class _ChartScreenState extends State<ChartScreen>
 
   void _goToChildren() {
     //showInSnackBar(categoryChooseId);
-    if (mapCategories[categoryChooseId]!.isParent == true) {
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TabChartPage(
-                projectId: widget.projectId!,
-                categoryId: categoryChooseId,
-                title: categoryChooseName,
-                year: widget.year!),
-          ));
-    } else {
-      showInSnackBar("Không có danh mục con");
-    }
+    // if (mapCategories[categoryChooseId]!.isParent == true) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TabChartPage(
+              projectId: widget.projectId!,
+              categoryId: categoryChooseId,
+              title: categoryChooseName,
+              year: widget.year!),
+        ));
+    // } else {
+    showInSnackBar("Không có danh mục con");
+    // }
   }
 
   Widget _chooseStatus() {

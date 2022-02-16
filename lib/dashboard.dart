@@ -235,7 +235,7 @@ class _DashboardPageState extends State<DashboardPage> {
         // ),
         ListTile(
           title: const Text(
-            'Quản trị Dự án',
+            'Nâng cao chất lượng vận hành',
           ),
           leading: const Icon(Icons.manage_search),
           onTap: () {

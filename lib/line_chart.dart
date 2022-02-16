@@ -22,7 +22,8 @@ class LineChartPage extends StatefulWidget {
   State<StatefulWidget> createState() => LineChartPageState();
 }
 
-class LineChartPageState extends State<LineChartPage> {
+class LineChartPageState extends State<LineChartPage>
+    with AutomaticKeepAliveClientMixin {
   late bool isShowingTotalTask;
   bool isLoading = false;
   List<ChartDataMonth> chartDataMonths = [];
@@ -543,6 +544,10 @@ class LineChartPageState extends State<LineChartPage> {
           ),
         ));
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }
 // LineChart (gọi LineChartData --> chưa sample Data --> done)
 
