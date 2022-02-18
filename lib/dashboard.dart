@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 //import 'package:overlay_support/overlay_support.dart';
 import 'package:overlay_support/overlay_support.dart';
 
+import 'bar_chart.dart';
 import 'chart.dart';
 import 'project_list.dart';
 // import 'category_list.dart';
@@ -179,21 +180,24 @@ class _DashboardPageState extends State<DashboardPage> {
   final List<Widget> _widgetOptions = [];
 
   void buildTab() {
-    _widgetOptions.add(_buildMessageWidget());
-    _widgetOptions.add(const Text(
-      'Index 1: Business',
-      style: optionStyle,
-    ));
+    // _widgetOptions.add(_buildMessageWidget());
+    _widgetOptions.add(const ProjectList());
+    _widgetOptions.add(const BarChartSample());
 
-    _widgetOptions.add(const Text(
-      'Index 2: School',
-      style: optionStyle,
-    ));
+    // _widgetOptions.add(const Text(
+    //   'Index 1: Business',
+    //   style: optionStyle,
+    // ));
 
-    _widgetOptions.add(const Text(
-      'Index 3: Settings',
-      style: optionStyle,
-    ));
+    // _widgetOptions.add(const Text(
+    //   'Index 2: School',
+    //   style: optionStyle,
+    // ));
+
+    // _widgetOptions.add(const Text(
+    //   'Index 3: Settings',
+    //   style: optionStyle,
+    // ));
   }
 
   @override
@@ -233,16 +237,16 @@ class _DashboardPageState extends State<DashboardPage> {
         //     Navigator.pop(context); //trả về như cũ nhé
         //   },
         // ),
-        ListTile(
-          title: const Text(
-            'Nâng cao chất lượng vận hành',
-          ),
-          leading: const Icon(Icons.manage_search),
-          onTap: () {
-            //Navigator.pop(context);
-            Navigator.pushNamed(context, '/list_project');
-          },
-        ),
+        // ListTile(
+        //   title: const Text(
+        //     'Nâng cao chất lượng vận hành',
+        //   ),
+        //   leading: const Icon(Icons.manage_search),
+        //   onTap: () {
+        //     //Navigator.pop(context);
+        //     Navigator.pushNamed(context, '/list_project');
+        //   },
+        // ),
         // ListTile(
         //   title: const Text(
         //     'Line Chart',
@@ -322,9 +326,10 @@ class _DashboardPageState extends State<DashboardPage> {
           'Dashboard',
         ),
       ),
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
+      // body: Center(
+      //   child: _widgetOptions.elementAt(_selectedIndex),
+      // ),
+      body: IndexedStack(index: _selectedIndex, children: _widgetOptions),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -333,20 +338,20 @@ class _DashboardPageState extends State<DashboardPage> {
             backgroundColor: Colors.red,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.business),
-            label: 'Business',
+            icon: Icon(Icons.analytics),
+            label: 'Thống kê',
             backgroundColor: Colors.green,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'School',
-            backgroundColor: Colors.purple,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-            backgroundColor: Colors.pink,
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.school),
+          //   label: 'School',
+          //   backgroundColor: Colors.purple,
+          // ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.settings),
+          //   label: 'Settings',
+          //   backgroundColor: Colors.pink,
+          // ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.amber[800],

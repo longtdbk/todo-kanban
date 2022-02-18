@@ -343,21 +343,37 @@ class _ChartScreenState extends State<ChartScreen>
       isLoading = true;
     });
 
+    var outputFormat = DateFormat('yyyy-MM-dd');
+    var dateToStr = outputFormat.format(dateTo);
+    var dateFromStr = outputFormat.format(dateFrom);
+
     // final prefs = await SharedPreferences.getInstance();
     var url = "";
     if (parentCategory != "") {
       url =
-          'http://www.vietinrace.com/srvTD/getCalculateTasksCategoryCustomField/' +
+          'http://www.vietinrace.com/srvTD/getCalculateTasksCategoryCustomFieldList/' +
               project +
               "/" +
               parentCategory +
               "/" +
-              customField;
+              customField +
+              "/" +
+              statuses +
+              "/" +
+              dateFromStr +
+              "/" +
+              dateToStr;
     } else {
-      url = 'http://www.vietinrace.com/srvTD/getCalculateTasksCustomField/' +
+      url = 'http://www.vietinrace.com/srvTD/getCalculateTaskCustomFieldList/' +
           project +
+          '/0/' +
+          customField +
           "/" +
-          customField;
+          statuses +
+          "/" +
+          dateFromStr +
+          "/" +
+          dateToStr;
     }
     final responseCF = await http.get(Uri.parse(url));
     if (mounted) {
@@ -546,14 +562,14 @@ class _ChartScreenState extends State<ChartScreen>
     return hsls;
   }
 
-  Widget _buildHeadline(String headline) {
+  Widget _buildHeadline(String headline, Color color) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
     Widget buildDivider() => Container(
           height: 2,
-          //color: Colors.grey.shade300,
-          color: Colors.lightBlue,
+          //color: Colors.grey.shade300,Colors.lightBlue
+          color: color,
         );
 
     return Column(
@@ -703,7 +719,7 @@ class _ChartScreenState extends State<ChartScreen>
     for (int i = 0; i < fields.length; i++) {
       String customField = fields[i].id;
 
-      listChartCustom.add(_buildHeadline(fields[i].name));
+      listChartCustom.add(_buildHeadline(fields[i].name, Colors.lightBlue));
       // listChartCustom.add(Text(fields[i].name));
       listChartCustom.add(const SizedBox(height: 10));
 
@@ -791,11 +807,12 @@ class _ChartScreenState extends State<ChartScreen>
     for (int i = 0; i < fieldsNumber.length; i++) {
       String customField = fieldsNumber[i].id;
       // listChartCustomNumber.add(Text(fieldsNumber[i].name));
-      listChartCustomNumber.add(_buildHeadline(fieldsNumber[i].name));
+      listChartCustomNumber
+          .add(_buildHeadline(fieldsNumber[i].name, Colors.lightBlue));
       listChartCustomNumber.add(const SizedBox(height: 10));
 
       // listChartCustomNumber.add(const SizedBox(height: 10));
-      listChartCustomNumber.add(_buildHeadline('Số Công Việc'));
+      listChartCustomNumber.add(_buildHeadline('Số Công Việc', Colors.lime));
 
       // listChartCustomNumber.add(const Text('Số Công Việc'));
       listChartCustomNumber.add(_buildChartCustomItemNumber(1, customField));

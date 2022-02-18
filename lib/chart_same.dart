@@ -213,7 +213,7 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
       }
       chartColors = getColors(chartDatas.length);
 
-      // await getCustomFieldsProject(project, "");
+      await getCustomFieldsProject(project, "");
     } else {
       showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
     }
@@ -339,6 +339,11 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
       String project, String parentCategory, int fieldIndex) async {
     List<ChartData> chartDatasCustomField = [];
     String customField = fields[fieldIndex].id;
+
+    var outputFormat = DateFormat('yyyy-MM-dd');
+    var dateToStr = outputFormat.format(dateTo);
+    var dateFromStr = outputFormat.format(dateFrom);
+
     setState(() {
       isLoading = true;
     });
@@ -347,17 +352,30 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     var url = "";
     if (parentCategory != "") {
       url =
-          'http://www.vietinrace.com/srvTD/getCalculateTasksCategoryCustomField/' +
+          'http://www.vietinrace.com/srvTD/getCalculateTasksCategoryCustomFieldListSameCode/' +
               project +
               "/" +
               parentCategory +
               "/" +
-              customField;
+              customField +
+              "/" +
+              statuses +
+              "/" +
+              dateFromStr +
+              "/" +
+              dateToStr;
     } else {
-      url = 'http://www.vietinrace.com/srvTD/getCalculateTasksCustomField/' +
-          project +
-          "/" +
-          customField;
+      url =
+          'http://www.vietinrace.com/srvTD/getCalculateTaskCustomFieldListSameCode/' +
+              project +
+              '/1/' +
+              customField +
+              "/" +
+              statuses +
+              "/" +
+              dateFromStr +
+              "/" +
+              dateToStr;
     }
     final responseCF = await http.get(Uri.parse(url));
     if (mounted) {
@@ -424,7 +442,7 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     var url = "";
     if (parentCategory != "") {
       url =
-          'http://www.vietinrace.com/srvTD/getCalculateTasksCategoryCustomFieldNumber/' +
+          'http://www.vietinrace.com/srvTD/getCalculateTasksCategoryCustomFieldNumberSameCode/' +
               project +
               "/" +
               parentCategory +
@@ -438,9 +456,9 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
               dateToStr;
     } else {
       url =
-          'http://www.vietinrace.com/srvTD/getCalculateTaskCustomFieldNumber/' +
+          'http://www.vietinrace.com/srvTD/getCalculateTaskCustomFieldNumberSameCode/' +
               project +
-              '/0/' +
+              '/1/' +
               customField +
               "/" +
               statuses +
@@ -546,14 +564,14 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     return hsls;
   }
 
-  Widget _buildHeadline(String headline) {
+  Widget _buildHeadline(String headline, Color color) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
     Widget buildDivider() => Container(
           height: 2,
-          //color: Colors.grey.shade300,
-          color: Colors.lightBlue,
+          //color: Colors.grey.shade300, Colors.lightBlue
+          color: color,
         );
 
     return Column(
@@ -703,7 +721,7 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     for (int i = 0; i < fields.length; i++) {
       String customField = fields[i].id;
 
-      listChartCustom.add(_buildHeadline(fields[i].name));
+      listChartCustom.add(_buildHeadline(fields[i].name, Colors.lightBlue));
       // listChartCustom.add(Text(fields[i].name));
       listChartCustom.add(const SizedBox(height: 10));
 
@@ -791,11 +809,12 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     for (int i = 0; i < fieldsNumber.length; i++) {
       String customField = fieldsNumber[i].id;
       // listChartCustomNumber.add(Text(fieldsNumber[i].name));
-      listChartCustomNumber.add(_buildHeadline(fieldsNumber[i].name));
+      listChartCustomNumber
+          .add(_buildHeadline(fieldsNumber[i].name, Colors.lightBlue));
       listChartCustomNumber.add(const SizedBox(height: 10));
 
       // listChartCustomNumber.add(const SizedBox(height: 10));
-      listChartCustomNumber.add(_buildHeadline('Số Công Việc'));
+      listChartCustomNumber.add(_buildHeadline('Số Công Việc', Colors.lime));
 
       // listChartCustomNumber.add(const Text('Số Công Việc'));
       listChartCustomNumber.add(_buildChartCustomItemNumber(1, customField));
@@ -887,7 +906,8 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
               projectId: widget.projectId!,
               categoryId: categoryChooseId,
               title: categoryChooseName,
-              year: widget.year!),
+              year: widget.year!,
+              indexTab: 1),
         ));
     // } else {
     showInSnackBar("Không có danh mục con");

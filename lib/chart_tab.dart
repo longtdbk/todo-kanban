@@ -13,8 +13,14 @@ class TabChartPage extends StatefulWidget {
   final String? categoryId;
   final String? title;
   final String? year;
+  final int? indexTab;
   const TabChartPage(
-      {Key? key, this.projectId, this.categoryId, this.title, this.year})
+      {Key? key,
+      this.projectId,
+      this.categoryId,
+      this.title,
+      this.year,
+      this.indexTab})
       : super(key: key);
 
   @override
@@ -30,6 +36,13 @@ class TabChartPageState extends State<TabChartPage> {
   @override
   void initState() {
     super.initState();
+
+    if (widget.indexTab != null) {
+      setState(() {
+        _selectedIndex = widget.indexTab!;
+      });
+    }
+
     createTabItem();
   }
 
