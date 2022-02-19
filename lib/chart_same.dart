@@ -1032,9 +1032,10 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
           ((option == 2 && chartDatas[i].percentTotalHasProfit > 0))) {
         indicators.add(Indicator(
           color: chooseColor(i),
-          text: chartDatas[i].name.length > 25
-              ? chartDatas[i].name.substring(0, 25)
-              : chartDatas[i].name,
+          // text: chartDatas[i].name.length > 25
+          //     ? chartDatas[i].name.substring(0, 25)
+          //     : chartDatas[i].name,
+          text: chartDatas[i].name,
           isSquare: true,
         ));
 
@@ -1099,9 +1100,10 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
               mapDatasCustomField[customField]![i].percentTotal > 0)) {
         indicatorsCustomField.add(Indicator(
           color: chooseColor(i),
-          text: mapDatasCustomField[customField]![i].name.length > 25
-              ? mapDatasCustomField[customField]![i].name.substring(0, 25)
-              : mapDatasCustomField[customField]![i].name,
+          // text: mapDatasCustomField[customField]![i].name.length > 25
+          //     ? mapDatasCustomField[customField]![i].name.substring(0, 25)
+          //     : mapDatasCustomField[customField]![i].name,
+          text: mapDatasCustomField[customField]![i].name,
           isSquare: true,
         ));
 
@@ -1166,9 +1168,10 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
               mapDatasCustomFieldNumber[customField]![i].percentTotal > 0)) {
         indicatorsCustomFieldNumber.add(Indicator(
           color: chooseColor(i),
-          text: mapDatasCustomFieldNumber[customField]![i].name.length > 25
-              ? mapDatasCustomFieldNumber[customField]![i].name.substring(0, 25)
-              : mapDatasCustomFieldNumber[customField]![i].name,
+          // text: mapDatasCustomFieldNumber[customField]![i].name.length > 25
+          //     ? mapDatasCustomFieldNumber[customField]![i].name.substring(0, 25)
+          //     : mapDatasCustomFieldNumber[customField]![i].name,
+          text: mapDatasCustomFieldNumber[customField]![i].name,
           isSquare: true,
         ));
 

@@ -31,11 +31,29 @@ class Indicator extends StatelessWidget {
         const SizedBox(
           width: 4,
         ),
-        Text(
-          text,
-          style: TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
-        )
+        // Flexible(
+        // child:
+        Container(
+            padding: const EdgeInsets.all(16.0),
+            width: 140,
+            child: Column(children: [
+              Text(
+                text,
+                // overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: textColor),
+              )
+            ])),
+
+        // Text(
+        //   text,
+        //   overflow: TextOverflow.ellipsis,
+        //   style: TextStyle(
+        //       fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
+        // )
+        // )
       ],
     );
   }
