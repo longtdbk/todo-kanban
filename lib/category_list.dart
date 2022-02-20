@@ -810,7 +810,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
   List<Widget> createButtonItem() {
     List<Widget> listButton = [];
     CupertinoButton button = CupertinoButton(
-        child: const Text('Xem Công việc'),
+        child: const Text('Xem Chi tiết'),
         onPressed: () {
           _routeToTaskList(_selectedNode);
         });

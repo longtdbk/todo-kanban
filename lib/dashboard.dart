@@ -323,7 +323,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Dashboard',
+          'Quản trị ',
         ),
       ),
       // body: Center(
@@ -334,7 +334,7 @@ class _DashboardPageState extends State<DashboardPage> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Home',
+            label: 'Danh sách',
             backgroundColor: Colors.red,
           ),
           BottomNavigationBarItem(

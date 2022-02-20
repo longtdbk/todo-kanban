@@ -33,27 +33,28 @@ class Indicator extends StatelessWidget {
         ),
         // Flexible(
         // child:
-        Container(
-            padding: const EdgeInsets.all(16.0),
-            width: 140,
-            child: Column(children: [
-              Text(
+        text.length > 18
+            ? Container(
+                padding: const EdgeInsets.all(16.0),
+                width: 140,
+                child: Column(children: [
+                  Text(
+                    text,
+                    // overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: textColor),
+                  )
+                ]))
+            : Text(
                 text,
-                // overflow: TextOverflow.ellipsis,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: textColor),
-              )
-            ])),
-
-        // Text(
-        //   text,
-        //   overflow: TextOverflow.ellipsis,
-        //   style: TextStyle(
-        //       fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
-        // )
-        // )
+              ),
       ],
     );
   }

@@ -150,8 +150,8 @@ class ProjectSingleState extends State<ProjectSingle> {
 
     return Scaffold(
         appBar: AppBar(
-          title: const Text(
-            'Dự án',
+          title: Text(
+            '' + widget.project!.name.toLowerCase(),
           ),
         ),
         body: Center(
