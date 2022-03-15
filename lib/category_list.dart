@@ -557,17 +557,21 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
     );
   }
 
-  void showAddChildren(int option) {
+  void showAddChildren(int option) async {
     String categoryParent = '';
+    String textTitle = 'Thêm Danh Mục Gốc';
     if (option > 0) {
       categoryParent = _treeViewController.selectedNode!.key;
+      textTitle = 'Thêm Danh Mục Con';
     }
     TextEditingController editingController = TextEditingController(text: '');
+    await Future.delayed(Duration.zero);
+
     showCupertinoDialog(
         context: context,
         builder: (context) {
           return CupertinoAlertDialog(
-              title: const Text('Thêm Danh Mục Con'),
+              title: Text(textTitle),
               content: Container(
                 height: 80,
                 alignment: Alignment.center,
@@ -608,7 +612,8 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
         });
   }
 
-  void _routeToTaskList(String key) {
+  void _routeToTaskList(String key) async {
+    // Navigator.pop(context, "");
     CategoryData category = CategoryData();
     for (int i = 0; i < categories.length; i++) {
       if (categories[i].key == key) {
@@ -621,12 +626,19 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
     }
     if (category.isParent == false) {
       // _routeToTaskList(category.id);
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TaskListScreen(
-                projectId: widget.projectId, categoryId: category.id),
-          ));
+      final navigator = Navigator.of(context);
+      await Future.delayed(Duration.zero);
+      navigator.push(MaterialPageRoute(
+        builder: (context) => TaskListScreen(
+            projectId: widget.projectId, categoryId: category.id),
+      ));
+
+      // Navigator.push(
+      //     context,
+      //     MaterialPageRoute(
+      //       builder: (context) => TaskListScreen(
+      //           projectId: widget.projectId, categoryId: category.id),
+      //     ));
     }
   }
 
@@ -686,6 +698,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
 
   Future<void> _showListShare() async {
     await getProjectShare();
+    await Future.delayed(Duration.zero);
     showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
@@ -807,17 +820,57 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
     Navigator.pop(context);
   }
 
+  Future<void> changeName() async {
+    TextEditingController editingController =
+        TextEditingController(text: _treeViewController.selectedNode!.label);
+    await Future.delayed(Duration.zero);
+    showCupertinoDialog(
+        context: context,
+        builder: (context) {
+          return CupertinoAlertDialog(
+            title: const Text('Sửa tên Danh Mục'),
+            content: Container(
+              height: 80,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(10),
+              child: CupertinoTextField(
+                controller: editingController,
+                autofocus: true,
+              ),
+            ),
+            actions: <Widget>[
+              CupertinoDialogAction(
+                child: const Text('Cancel'),
+                isDestructiveAction: true,
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              CupertinoDialogAction(
+                child: const Text('Update'),
+                isDefaultAction: true,
+                onPressed: () {
+                  if (editingController.text.isNotEmpty) {
+                    editCategory(editingController.text,
+                        _treeViewController.selectedNode!.key);
+                  }
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
+  }
+
   List<Widget> createButtonItem() {
     List<Widget> listButton = [];
     CupertinoButton button = CupertinoButton(
-        child: const Text('Xem Chi tiết'),
+        child: const Text('Chi tiết'),
         onPressed: () {
           _routeToTaskList(_selectedNode);
         });
     listButton.add(button);
     if (widget.categoryId == '') {
       CupertinoButton button5 = CupertinoButton(
-        child: const Text('Thêm danh mục gốc'),
+        child: const Text('Thêm Danh mục gốc'),
         onPressed: () {
           showAddChildren(0);
         },
@@ -825,7 +878,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
       listButton.add(button5);
 
       CupertinoButton button2 = CupertinoButton(
-        child: const Text('Thêm danh mục con'),
+        child: const Text('Thêm Danh mục con'),
         onPressed: () {
           showAddChildren(1);
         },
@@ -894,9 +947,53 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
     return listButton;
   }
 
+  void _showPopupMenu() async {
+    await showMenu(
+      context: context,
+      //position:_selectedNode.
+      position: const RelativeRect.fromLTRB(100, 100, 100, 100),
+      items: [
+        PopupMenuItem<String>(
+            child: const Text('Xem Chi Tiết'),
+            value: '0',
+            onTap: () {
+              //Navigator.pop(context);
+              _routeToTaskList(_selectedNode);
+            }),
+        PopupMenuItem<String>(
+            child: const Text('Thêm Danh mục gốc'),
+            value: '1',
+            onTap: () {
+              showAddChildren(0);
+            }),
+        PopupMenuItem<String>(
+            child: const Text('Thêm Danh mục con'),
+            value: '2',
+            onTap: () {
+              showAddChildren(1);
+            }),
+        PopupMenuItem<String>(
+            child: const Text('Phân quyền'),
+            value: '3',
+            onTap: () {
+              _showListShare();
+            }),
+        PopupMenuItem<String>(
+            child: const Text('Sửa tên'),
+            value: '4',
+            onTap: () {
+              changeName();
+            }),
+      ],
+      elevation: 8.0,
+    );
+  }
+
   //tao cay :)
   @override
   Widget build(BuildContext context) {
+    // PopupMenu.context = context;
+
     TreeViewTheme _treeViewTheme = TreeViewTheme(
       expanderTheme: ExpanderThemeData(
         type: _expanderType,
@@ -951,7 +1048,10 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
                           onExpansionChanged: (key, expanded) =>
                               _expandNode(key, expanded),
                           onNodeTap: (key) {
-                            debugPrint('Selected: $key');
+                            // debugPrint('Selected: $key');
+                            _showPopupMenu();
+
+                            // showPopup();
 
                             setState(() {
                               _selectedNode = key;
@@ -1006,11 +1106,14 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
                 ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
+      bottomNavigationBar: const SafeArea(
         top: false,
         child: ButtonBar(
-          alignment: MainAxisAlignment.spaceEvenly,
-          children: createButtonItem(),
+          alignment: MainAxisAlignment.spaceEvenly, // spaceEvenly, start
+          //buttonPadding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+          // children : createButtonItem(),
+          children: [],
+
           // children: <Widget>[
           //   CupertinoButton(
           //       child: const Text('Xem Công việc'),
@@ -1087,7 +1190,7 @@ class _ProjectCategoryScreenState extends State<ProjectCategoryScreen> {
 
   _expandNode(String key, bool expanded) {
     String msg = '${expanded ? "Expanded" : "Collapsed"}: $key';
-    debugPrint(msg);
+    //debugPrint(msg);
     Node node = _treeViewController.getNode(key)!;
     if (node != null) {
       List<Node> updated;
