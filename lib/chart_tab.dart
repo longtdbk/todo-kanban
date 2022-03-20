@@ -65,11 +65,11 @@ class TabChartPageState extends State<TabChartPage> {
         title: widget.title,
         year: widget.year));
 
-    _listBody.add(LineChartPage(
-        projectId: widget.projectId,
-        categoryId: widget.categoryId,
-        title: widget.title,
-        year: widget.year));
+    // _listBody.add(LineChartPage(
+    //     projectId: widget.projectId,
+    //     categoryId: widget.categoryId,
+    //     title: widget.title,
+    //     year: widget.year));
   }
 
   @override
@@ -90,19 +90,19 @@ class TabChartPageState extends State<TabChartPage> {
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.pie_chart),
-              label: 'Pie Chart',
+              label: 'Chủ điểm',
               backgroundColor: Colors.red,
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.pie_chart_outline_sharp),
-              label: 'PieChart Same Code ',
+              label: 'Phòng ban ',
               backgroundColor: Colors.green,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.show_chart),
-              label: 'Line Chart ',
-              backgroundColor: Colors.green,
-            ),
+            // BottomNavigationBarItem(
+            //   icon: Icon(Icons.show_chart),
+            //   label: 'Line Chart ',
+            //   backgroundColor: Colors.green,
+            // ),
           ],
           currentIndex: _selectedIndex,
           selectedItemColor: Colors.amber[800],

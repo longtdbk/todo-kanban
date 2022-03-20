@@ -656,64 +656,69 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     return color;
   }
 
-  Widget _buildChart(int option) {
+  Widget _buildChart(int option, String label) {
     List<PieChartSectionData> listPies = showingSectionsChart(option);
     return listPies.isEmpty
         ? const SizedBox(
             height: 5,
           )
-        : Card(
-            color: Colors.white,
-            child: Row(
-              children: <Widget>[
-                const SizedBox(
-                  height: 18,
-                ),
-                Expanded(
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: PieChart(
-                      PieChartData(
-                          pieTouchData: PieTouchData(touchCallback:
-                              (FlTouchEvent event, pieTouchResponse) {
-                            setState(() {
-                              if (!event.isInterestedForInteractions ||
-                                  pieTouchResponse == null ||
-                                  pieTouchResponse.touchedSection == null) {
-                                touchedIndex = -1;
-                                return;
-                              }
-                              touchedIndex = pieTouchResponse
-                                  .touchedSection!.touchedSectionIndex;
-                              if (touchedIndex >= 0) {
-                                categoryChooseName =
-                                    chartDatas[touchedIndex].name;
-                                categoryChooseId = chartDatas[touchedIndex].id;
-                              }
-                            });
-                          }),
-                          borderData: FlBorderData(
-                            show: false,
-                          ),
-                          sectionsSpace: 0,
-                          centerSpaceRadius: 30,
-                          sections: showingSectionsChart(option)),
+        : Column(children: [
+            const SizedBox(height: 10),
+            _buildHeadline(label, Colors.lime),
+            Card(
+              color: Colors.white,
+              child: Row(
+                children: <Widget>[
+                  const SizedBox(
+                    height: 18,
+                  ),
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: PieChart(
+                        PieChartData(
+                            pieTouchData: PieTouchData(touchCallback:
+                                (FlTouchEvent event, pieTouchResponse) {
+                              setState(() {
+                                if (!event.isInterestedForInteractions ||
+                                    pieTouchResponse == null ||
+                                    pieTouchResponse.touchedSection == null) {
+                                  touchedIndex = -1;
+                                  return;
+                                }
+                                touchedIndex = pieTouchResponse
+                                    .touchedSection!.touchedSectionIndex;
+                                if (touchedIndex >= 0) {
+                                  categoryChooseName =
+                                      chartDatas[touchedIndex].name;
+                                  categoryChooseId =
+                                      chartDatas[touchedIndex].id;
+                                }
+                              });
+                            }),
+                            borderData: FlBorderData(
+                              show: false,
+                            ),
+                            sectionsSpace: 0,
+                            centerSpaceRadius: 30,
+                            sections: showingSectionsChart(option)),
+                      ),
                     ),
                   ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  // cho vào vòng lặp được này
-                  children: showingIndicators(option),
-                ),
-                const SizedBox(
-                  width: 28,
-                ),
-              ],
-            ),
-          );
+                  Column(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    // cho vào vòng lặp được này
+                    children: showingIndicators(option),
+                  ),
+                  const SizedBox(
+                    width: 28,
+                  ),
+                ],
+              ),
+            )
+          ]);
   }
 
   Widget _buildChartCustom() {
@@ -725,81 +730,86 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
       // listChartCustom.add(Text(fields[i].name));
       listChartCustom.add(const SizedBox(height: 10));
 
-      listChartCustom.add(const SizedBox(height: 10));
-      listChartCustom.add(const Text('Số Công Việc'));
-      listChartCustom.add(_buildChartCustomItem(1, customField));
+      // listChartCustom.add(const SizedBox(height: 10));
+      // listChartCustom.add(const Text('Số Công Việc'));
+      listChartCustom
+          .add(_buildChartCustomItem(1, 'Số Công Việc', customField));
 
-      listChartCustom.add(const SizedBox(height: 10));
-      listChartCustom.add(const Text('Lợi Ích (Triệu Đồng)'));
-      listChartCustom.add(_buildChartCustomItem(0, customField));
+      // listChartCustom.add(const SizedBox(height: 10));
+      // listChartCustom.add(const Text('Lợi Ích (Triệu Đồng)'));
+      listChartCustom
+          .add(_buildChartCustomItem(0, 'Lợi Ích (Triệu Đồng)', customField));
     }
     return Column(children: listChartCustom);
   }
 
-  Widget _buildChartCustomItem(int option, String customField) {
+  Widget _buildChartCustomItem(int option, String label, String customField) {
     List<PieChartSectionData> listPies =
         showingSectionsChartCustomField(option, customField);
     return listPies.isEmpty
         ? const SizedBox(
             height: 5,
           )
-        :
-        // Widget card = Card(
-        Card(
-            color: Colors.white,
-            child: Row(
-              children: <Widget>[
-                const SizedBox(
-                  height: 18,
-                ),
-                Expanded(
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: PieChart(
-                      PieChartData(
-                          pieTouchData: PieTouchData(touchCallback:
-                              (FlTouchEvent event, pieTouchResponse) {
-                            setState(() {
-                              if (!event.isInterestedForInteractions ||
-                                  pieTouchResponse == null ||
-                                  pieTouchResponse.touchedSection == null) {
-                                mapTouchedIndexCustom[customField] = -1;
-                                return;
-                              }
-                              mapTouchedIndexCustom[customField] =
-                                  pieTouchResponse
-                                      .touchedSection!.touchedSectionIndex;
-                              if (mapTouchedIndexCustom[customField]! >= 0) {
-                                // showInSnackBar(
-                                //     mapTouchedIndexCustom[customField].toString());
-                                // categoryChooseName = chartDatas[touchedIndex].name;
-                                // categoryChooseId = chartDatas[touchedIndex].id;
-                              }
-                            });
-                          }),
-                          borderData: FlBorderData(
-                            show: false,
-                          ),
-                          sectionsSpace: 0,
-                          centerSpaceRadius: 40,
-                          sections: showingSectionsChartCustomField(
-                              option, customField)),
+        : Column(children: [
+            const SizedBox(height: 10),
+            _buildHeadline(label, Colors.lime),
+            // Widget card = Card(
+            Card(
+              color: Colors.white,
+              child: Row(
+                children: <Widget>[
+                  const SizedBox(
+                    height: 18,
+                  ),
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: PieChart(
+                        PieChartData(
+                            pieTouchData: PieTouchData(touchCallback:
+                                (FlTouchEvent event, pieTouchResponse) {
+                              setState(() {
+                                if (!event.isInterestedForInteractions ||
+                                    pieTouchResponse == null ||
+                                    pieTouchResponse.touchedSection == null) {
+                                  mapTouchedIndexCustom[customField] = -1;
+                                  return;
+                                }
+                                mapTouchedIndexCustom[customField] =
+                                    pieTouchResponse
+                                        .touchedSection!.touchedSectionIndex;
+                                if (mapTouchedIndexCustom[customField]! >= 0) {
+                                  // showInSnackBar(
+                                  //     mapTouchedIndexCustom[customField].toString());
+                                  // categoryChooseName = chartDatas[touchedIndex].name;
+                                  // categoryChooseId = chartDatas[touchedIndex].id;
+                                }
+                              });
+                            }),
+                            borderData: FlBorderData(
+                              show: false,
+                            ),
+                            sectionsSpace: 0,
+                            centerSpaceRadius: 40,
+                            sections: showingSectionsChartCustomField(
+                                option, customField)),
+                      ),
                     ),
                   ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  // cho vào vòng lặp được này
-                  children: showingIndicatorsCustomField(option, customField),
-                ),
-                const SizedBox(
-                  width: 28,
-                ),
-              ],
-            ),
-          );
+                  Column(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    // cho vào vòng lặp được này
+                    children: showingIndicatorsCustomField(option, customField),
+                  ),
+                  const SizedBox(
+                    width: 28,
+                  ),
+                ],
+              ),
+            )
+          ]);
 
     // return card;
   }
@@ -809,89 +819,89 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     for (int i = 0; i < fieldsNumber.length; i++) {
       String customField = fieldsNumber[i].id;
       // listChartCustomNumber.add(Text(fieldsNumber[i].name));
-      listChartCustomNumber
-          .add(_buildHeadline(fieldsNumber[i].name, Colors.lightBlue));
-      listChartCustomNumber.add(const SizedBox(height: 10));
-
+      // listChartCustomNumber
+      //     .add(_buildHeadline(fieldsNumber[i].name, Colors.lightBlue));
       // listChartCustomNumber.add(const SizedBox(height: 10));
-      listChartCustomNumber.add(_buildHeadline('Số Công Việc', Colors.lime));
 
-      // listChartCustomNumber.add(const Text('Số Công Việc'));
-      listChartCustomNumber.add(_buildChartCustomItemNumber(1, customField));
+      // listChartCustomNumber
+      //     .add(_buildChartCustomItemNumber(1, 'Số Công Việc', customField));
 
-      listChartCustomNumber.add(const SizedBox(height: 10));
-      listChartCustomNumber.add(Text(fieldsNumber[i].name));
-      listChartCustomNumber.add(_buildChartCustomItemNumber(0, customField));
+      listChartCustomNumber.add(
+          _buildChartCustomItemNumber(0, fieldsNumber[i].name, customField));
     }
     return Column(children: listChartCustomNumber);
   }
 
-  Widget _buildChartCustomItemNumber(int option, String customField) {
+  Widget _buildChartCustomItemNumber(
+      int option, String label, String customField) {
     List<PieChartSectionData> listPies =
         showingSectionsChartCustomFieldNumber(option, customField);
     return listPies.isEmpty
         ? const SizedBox(
             height: 5,
           )
-        :
-        // Widget card = Card(
-        Card(
-            color: Colors.white,
-            child: Row(
-              children: <Widget>[
-                const SizedBox(
-                  height: 18,
-                ),
-                Expanded(
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: PieChart(
-                      PieChartData(
-                          pieTouchData: PieTouchData(touchCallback:
-                              (FlTouchEvent event, pieTouchResponse) {
-                            setState(() {
-                              if (!event.isInterestedForInteractions ||
-                                  pieTouchResponse == null ||
-                                  pieTouchResponse.touchedSection == null) {
-                                mapTouchedIndexCustomNumber[customField] = -1;
-                                return;
-                              }
-                              mapTouchedIndexCustomNumber[customField] =
-                                  pieTouchResponse
-                                      .touchedSection!.touchedSectionIndex;
-                              if (mapTouchedIndexCustomNumber[customField]! >=
-                                  0) {
-                                // showInSnackBar(
-                                //     mapTouchedIndexCustom[customField].toString());
-                                // categoryChooseName = chartDatas[touchedIndex].name;
-                                // categoryChooseId = chartDatas[touchedIndex].id;
-                              }
-                            });
-                          }),
-                          borderData: FlBorderData(
-                            show: false,
-                          ),
-                          sectionsSpace: 0,
-                          centerSpaceRadius: 30,
-                          sections: showingSectionsChartCustomFieldNumber(
-                              option, customField)),
+        : Column(children: [
+            const SizedBox(height: 10),
+            _buildHeadline(label, Colors.lime),
+            // Widget card = Card(
+            Card(
+              color: Colors.white,
+              child: Row(
+                children: <Widget>[
+                  const SizedBox(
+                    height: 18,
+                  ),
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: PieChart(
+                        PieChartData(
+                            pieTouchData: PieTouchData(touchCallback:
+                                (FlTouchEvent event, pieTouchResponse) {
+                              setState(() {
+                                if (!event.isInterestedForInteractions ||
+                                    pieTouchResponse == null ||
+                                    pieTouchResponse.touchedSection == null) {
+                                  mapTouchedIndexCustomNumber[customField] = -1;
+                                  return;
+                                }
+                                mapTouchedIndexCustomNumber[customField] =
+                                    pieTouchResponse
+                                        .touchedSection!.touchedSectionIndex;
+                                if (mapTouchedIndexCustomNumber[customField]! >=
+                                    0) {
+                                  // showInSnackBar(
+                                  //     mapTouchedIndexCustom[customField].toString());
+                                  // categoryChooseName = chartDatas[touchedIndex].name;
+                                  // categoryChooseId = chartDatas[touchedIndex].id;
+                                }
+                              });
+                            }),
+                            borderData: FlBorderData(
+                              show: false,
+                            ),
+                            sectionsSpace: 0,
+                            centerSpaceRadius: 30,
+                            sections: showingSectionsChartCustomFieldNumber(
+                                option, customField)),
+                      ),
                     ),
                   ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  // cho vào vòng lặp được này
-                  children:
-                      showingIndicatorsCustomFieldNumber(option, customField),
-                ),
-                const SizedBox(
-                  width: 28,
-                ),
-              ],
-            ),
-          );
+                  Column(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    // cho vào vòng lặp được này
+                    children:
+                        showingIndicatorsCustomFieldNumber(option, customField),
+                  ),
+                  const SizedBox(
+                    width: 28,
+                  ),
+                ],
+              ),
+            )
+          ]);
 
     // return card;
   }
@@ -1006,20 +1016,23 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
               )
             : const Text(''),
         const SizedBox(height: 10),
-        const Text('Số lượng công việc'),
-        _buildChart(1),
+        //const Text('Số lượng công việc'),
+        _buildHeadline('Thống kê chung', Colors.lightBlue),
+        _buildChart(1, 'Số Lượng Công Việc'),
 
-        const SizedBox(height: 10),
-        const Text('Số lượng công việc có Lợi ích'),
-        _buildChart(2),
+        // const SizedBox(height: 10),
+        // const Text('Số lượng công việc có Lợi ích'),
+        _buildChart(2, 'Số lượng công việc có Lợi ích'),
         // SizedBox(height: 10),
 
-        const SizedBox(height: 10),
-        const Text('Lợi ích (Triệu Đồng)'),
-        _buildChart(0),
+        // const SizedBox(height: 10),
+        // const Text('Lợi ích (Triệu Đồng)'),
+        _buildChart(0, 'Lợi ích (Triệu Đồng)'),
         _buildChartCustomNumber(),
         // const Text('Custom Field'),
-        _buildChartCustom(),
+
+        // Tạm thời bỏ đi vậy
+        // _buildChartCustom(),
       ])),
     );
   }

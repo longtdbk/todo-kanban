@@ -147,11 +147,11 @@ class ProjectSingleState extends State<ProjectSingle> {
       );
       listBottoms.add(barItem3);
     }
-
+    var name = widget.project!.name;
     return Scaffold(
         appBar: AppBar(
           title: Text(
-            '' + widget.project!.name.toLowerCase(),
+            name.substring(0, 1) + name.substring(1, name.length).toLowerCase(),
           ),
         ),
         body: Center(

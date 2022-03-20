@@ -323,7 +323,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Quản trị ',
+          'Các chủ điểm trọng tâm ',
         ),
       ),
       // body: Center(
