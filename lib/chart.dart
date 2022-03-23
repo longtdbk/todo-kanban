@@ -690,6 +690,11 @@ class _ChartScreenState extends State<ChartScreen>
     return color;
   }
 
+  String numberFormat(double total) {
+    var f = NumberFormat("###,###,###.00", "vi_VN");
+    return f.format(total);
+  }
+
   Widget _buildChart(int option) {
     List<PieChartSectionData> listPies = showingSectionsChart(option);
     var label = '';
@@ -1084,47 +1089,46 @@ class _ChartScreenState extends State<ChartScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.title!,
-          ),
+      appBar: AppBar(
+        title: Text(
+          widget.title!,
         ),
-        // resizeToAvoidBottomInset: false,
-        body: SingleChildScrollView(
+      ),
+      // resizeToAvoidBottomInset: false,
+      body: SingleChildScrollView(
           //aspectRatio: 1.3,
-          child: Expanded(
-              child: Column(children: [
-            _chooseStatus(),
-            _chooseDateTime(),
-            // categoryChooseName != "" ? Text(categoryChooseName) : Text(''),
-            // mapCategories[categoryChooseId]!.isParent == true
-            categoryChooseId != ""
-                ? ElevatedButton(
-                    onPressed: _goToChildren,
-                    child: Text('Xem danh mục con $categoryChooseName'),
-                  )
-                : const Text(''),
-            const SizedBox(height: 10),
-            //const Text('Số lượng công việc'),
-            // _buildHeadline('Thống kê chung', Colors.lightBlue),
-            _buildChart(1),
+          child: Column(children: [
+        _chooseStatus(),
+        _chooseDateTime(),
+        // categoryChooseName != "" ? Text(categoryChooseName) : Text(''),
+        // mapCategories[categoryChooseId]!.isParent == true
+        categoryChooseId != ""
+            ? ElevatedButton(
+                onPressed: _goToChildren,
+                child: Text('Xem danh mục con $categoryChooseName'),
+              )
+            : const Text(''),
+        const SizedBox(height: 10),
+        //const Text('Số lượng công việc'),
+        // _buildHeadline('Thống kê chung', Colors.lightBlue),
+        _buildChart(1),
 
-            // const SizedBox(height: 10),
-            // const Text('Số lượng công việc có Lợi ích'),
-            _buildChart(2),
-            // SizedBox(height: 10),
+        // const SizedBox(height: 10),
+        // const Text('Số lượng công việc có Lợi ích'),
+        _buildChart(2),
+        // SizedBox(height: 10),
 
-            // const SizedBox(height: 10),
-            // const Text('Lợi ích (Triệu Đồng)'),
-            _buildChart(0),
+        // const SizedBox(height: 10),
+        // const Text('Lợi ích (Triệu Đồng)'),
+        _buildChart(0),
 
-            _buildBarCustomNumber(),
+        _buildBarCustomNumber(),
 
-            // _buildChartCustomNumber(),
+        // _buildChartCustomNumber(),
 
-            // _buildChartCustom(),
-          ])),
-        ));
+        // _buildChartCustom(),
+      ])),
+    );
     // return Scaffold(
     //     appBar: AppBar(
     //       title: Text(
@@ -1161,6 +1165,7 @@ class _ChartScreenState extends State<ChartScreen>
     List<PieChartSectionData> listPies = [];
     double valuePercent = 0;
     String nameItem = "";
+    Map map = Map();
 
     for (int i = 0; i < chartDatas.length; i++) {
       if (option == 0) {
@@ -1194,7 +1199,11 @@ class _ChartScreenState extends State<ChartScreen>
             color: const Color(0xffffffff)),
       );
       if (nameItem != '0') {
-        listPies.add(sectionData);
+        if (!map.containsKey(chartDatas[i].name)) {
+          //map.putIfAbsent(chartDatas[i].name, () => chartDatas[i].name);
+          map.addAll({chartDatas[i].name: chartDatas[i].name});
+          listPies.add(sectionData);
+        }
       }
     }
     return listPies;
@@ -1415,12 +1424,6 @@ class _ChartScreenState extends State<ChartScreen>
   // int touchedIndex = -1;
 
   bool isPlaying = false;
-
-  String numberFormat(double total) {
-    var f = NumberFormat("###,###,###.00", "vi_VN");
-    return f.format(total);
-  }
-
   Widget _buildBar(String customFieldId, String customFieldName) {
     List<Widget> listChartBar = [];
     double total = 0.0;
@@ -1506,15 +1509,14 @@ class _ChartScreenState extends State<ChartScreen>
       ),
     );
     //listChartBar.add(card);
-    // //return Column(children: listChartBar);
+    //return Column(children: listChartBar);
+    // return Container(height: 350, child: card);
 
     return Column(children: [
       _buildHeadline(customFieldName, Colors.lime),
       Container(height: 300, child: card),
       SizedBox(height: 20),
     ]);
-
-    // return Container(height: 350, child: card);
     // return card;
   }
 
@@ -1548,26 +1550,6 @@ class _ChartScreenState extends State<ChartScreen>
   }
 
   // dữ liệu đây nhé :)
-  List<BarChartGroupData> showingGroups() => List.generate(7, (i) {
-        switch (i) {
-          case 0:
-            return makeGroupData(0, 5000, isTouched: i == touchedIndex);
-          case 1:
-            return makeGroupData(1, 6500, isTouched: i == touchedIndex);
-          case 2:
-            return makeGroupData(2, 500, isTouched: i == touchedIndex);
-          case 3:
-            return makeGroupData(3, 7500, isTouched: i == touchedIndex);
-          case 4:
-            return makeGroupData(4, 9000, isTouched: i == touchedIndex);
-          case 5:
-            return makeGroupData(5, 11500, isTouched: i == touchedIndex);
-          case 6:
-            return makeGroupData(6, 6500, isTouched: i == touchedIndex);
-          default:
-            return throw Error();
-        }
-      });
 
   List<BarChartGroupData> showingGroupsCN(int option, String customField) {
     List<BarChartGroupData> lists = [];
@@ -1587,111 +1569,6 @@ class _ChartScreenState extends State<ChartScreen>
     return lists;
   }
 
-  BarChartData mainBarData() {
-    return BarChartData(
-      barTouchData: BarTouchData(
-        touchTooltipData: BarTouchTooltipData(
-            tooltipBgColor: Colors.blueGrey,
-            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              String weekDay;
-              switch (group.x.toInt()) {
-                case 0:
-                  weekDay = 'Monday';
-                  break;
-                case 1:
-                  weekDay = 'Tuesday';
-                  break;
-                case 2:
-                  weekDay = 'Wednesday';
-                  break;
-                case 3:
-                  weekDay = 'Thursday';
-                  break;
-                case 4:
-                  weekDay = 'Friday';
-                  break;
-                case 5:
-                  weekDay = 'Saturday';
-                  break;
-                case 6:
-                  weekDay = 'Sunday';
-                  break;
-                default:
-                  throw Error();
-              }
-              return BarTooltipItem(
-                weekDay + '\n',
-                const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-                children: <TextSpan>[
-                  TextSpan(
-                    text: (rod.y - 1).toString(),
-                    style: const TextStyle(
-                      color: Colors.yellow,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              );
-            }),
-        touchCallback: (FlTouchEvent event, barTouchResponse) {
-          setState(() {
-            if (!event.isInterestedForInteractions ||
-                barTouchResponse == null ||
-                barTouchResponse.spot == null) {
-              touchedIndex = -1;
-              return;
-            }
-            touchedIndex = barTouchResponse.spot!.touchedBarGroupIndex;
-          });
-        },
-      ),
-      titlesData: FlTitlesData(
-        show: true,
-        rightTitles: SideTitles(showTitles: false),
-        topTitles: SideTitles(showTitles: false),
-        bottomTitles: SideTitles(
-          showTitles: true,
-          getTextStyles: (context, value) => const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-          margin: 16,
-          getTitles: (double value) {
-            switch (value.toInt()) {
-              case 0:
-                return 'M';
-              case 1:
-                return 'T';
-              case 2:
-                return 'W';
-              case 3:
-                return 'T';
-              case 4:
-                return 'F';
-              case 5:
-                return 'S';
-              case 6:
-                return 'S';
-              default:
-                return '';
-            }
-          },
-        ),
-        leftTitles: SideTitles(
-          showTitles: false,
-        ),
-      ),
-      borderData: FlBorderData(
-        show: false,
-      ),
-      barGroups: showingGroups(),
-      gridData: FlGridData(show: false),
-    );
-  }
-
   BarChartData mainBarDataCN(String customField) {
     return BarChartData(
       barTouchData: BarTouchData(
@@ -1701,7 +1578,6 @@ class _ChartScreenState extends State<ChartScreen>
               String weekDay;
               weekDay =
                   mapDatasCustomFieldNumber[customField]![group.x.toInt()].name;
-
               return BarTooltipItem(
                 weekDay + '\n',
                 const TextStyle(
@@ -1711,7 +1587,7 @@ class _ChartScreenState extends State<ChartScreen>
                 ),
                 children: <TextSpan>[
                   TextSpan(
-                    text: numberFormat(rod.y - 1), //.toString(),
+                    text: numberFormat(rod.y - 1),
                     style: const TextStyle(
                       color: Colors.yellow,
                       fontSize: 16,

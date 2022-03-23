@@ -96,15 +96,15 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
 
     var url =
         'http://www.vietinrace.com/srvTD/getTaskStatus/' + widget.projectId!;
-    final response = await http.get(Uri.parse(url));
+    final responseSame = await http.get(Uri.parse(url));
 
     setState(() {
       isLoading = false;
     });
-    if (response.statusCode == 200) {
-      var json = jsonDecode(response.body);
-      var data = json['data'];
-      for (var dat in data) {
+    if (responseSame.statusCode == 200) {
+      var jsonSame = jsonDecode(responseSame.body);
+      var dataSame = jsonSame['data'];
+      for (var dat in dataSame) {
         TaskStatusData taskStatus = TaskStatusData(
             id: dat['id'],
             name: dat['name'],
@@ -129,15 +129,15 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     var url = 'http://www.vietinrace.com/srvTD/getCategoriesProject/' +
         widget.projectId!;
     //prefs.getString('email')!;
-    final response = await http.get(Uri.parse(url));
+    final responseSame = await http.get(Uri.parse(url));
 
     setState(() {
       isLoading = false;
     });
-    if (response.statusCode == 200) {
-      var json = jsonDecode(response.body);
-      var data = json['data'];
-      for (var dat in data) {
+    if (responseSame.statusCode == 200) {
+      var jsonSame = jsonDecode(responseSame.body);
+      var dataSame = jsonSame['data'];
+      for (var dat in dataSame) {
         CategoriesData category = CategoriesData(
             name: dat['name'],
             id: dat['id'],
@@ -182,18 +182,18 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
             dateFromStr +
             "/" +
             dateToStr;
-    final response = await http.get(Uri.parse(url));
+    final responseSame = await http.get(Uri.parse(url));
 
     setState(() {
       isLoading = false;
     });
-    if (response.statusCode == 200) {
-      var json = jsonDecode(response.body);
-      var data = json['data'];
+    if (responseSame.statusCode == 200) {
+      var jsonSame = jsonDecode(responseSame.body);
+      var dataSame = jsonSame['data'];
       int totalProfit = 0;
       int totalTasks = 0;
       int totalHasProfit = 0;
-      for (var dat in data) {
+      for (var dat in dataSame) {
         ChartData chartData = ChartData();
         chartData.name = dat['name'];
         chartData.id = dat['id'];
@@ -241,18 +241,18 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
             dateFromStr +
             "/" +
             dateToStr;
-    final response = await http.get(Uri.parse(url));
+    final responseSame = await http.get(Uri.parse(url));
 
     setState(() {
       isLoading = false;
     });
-    if (response.statusCode == 200) {
-      var json = jsonDecode(response.body);
-      var data = json['data'];
+    if (responseSame.statusCode == 200) {
+      var jsonSame = jsonDecode(responseSame.body);
+      var dataSame = jsonSame['data'];
       int totalProfit = 0;
       int totalTasks = 0;
       int totalHasProfit = 0;
-      for (var dat in data) {
+      for (var dat in dataSame) {
         ChartData chartData = ChartData();
         chartData.name = dat['name'];
         chartData.id = dat['id'];
@@ -289,15 +289,15 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     // final prefs = await SharedPreferences.getInstance();
 
     var url = 'http://www.vietinrace.com/srvTD/getCustomField/' + project;
-    final response = await http.get(Uri.parse(url));
+    final responseSame = await http.get(Uri.parse(url));
 
     setState(() {
       isLoading = false;
     });
-    if (response.statusCode == 200) {
-      var json = jsonDecode(response.body);
-      var data = json['data'];
-      for (var dat in data) {
+    if (responseSame.statusCode == 200) {
+      var jsonSame = jsonDecode(responseSame.body);
+      var dataSame = jsonSame['data'];
+      for (var dat in dataSame) {
         CustomFieldData field = CustomFieldData();
         field.name = dat['name'];
         field.code = dat['name'];
@@ -377,18 +377,18 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
               "/" +
               dateToStr;
     }
-    final responseCF = await http.get(Uri.parse(url));
+    final responseCFSame = await http.get(Uri.parse(url));
     if (mounted) {
       setState(() {
         isLoading = false;
       });
     }
-    if (responseCF.statusCode == 200) {
-      var jsonCF = jsonDecode(responseCF.body);
-      var dataCustomField = jsonCF['data'];
+    if (responseCFSame.statusCode == 200) {
+      var jsonCFSame = jsonDecode(responseCFSame.body);
+      var dataCustomFieldSame = jsonCFSame['data'];
       int totalProfit = 0;
       int totalTasks = 0;
-      for (var datCF in dataCustomField) {
+      for (var datCF in dataCustomFieldSame) {
         ChartData chartData = ChartData();
         chartData.name = datCF['name'];
         chartData.id = datCF['id'];
@@ -467,18 +467,18 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
               "/" +
               dateToStr;
     }
-    final responseNb = await http.get(Uri.parse(url));
+    final responseNbSame = await http.get(Uri.parse(url));
     if (mounted) {
       setState(() {
         isLoading = false;
       });
     }
-    if (responseNb.statusCode == 200) {
-      var jsonNb = jsonDecode(responseNb.body);
-      var dataNumber = jsonNb['data'];
+    if (responseNbSame.statusCode == 200) {
+      var jsonNbSame = jsonDecode(responseNbSame.body);
+      var dataNumberSame = jsonNbSame['data'];
       int totalProfit = 0;
       int totalTasks = 0;
-      for (var datNb in dataNumber) {
+      for (var datNb in dataNumberSame) {
         ChartData chartData = ChartData();
         chartData.name = datNb['name'];
         chartData.id = datNb['id'];
