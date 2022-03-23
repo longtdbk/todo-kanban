@@ -548,6 +548,10 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
 
   List<Color> getColors(int num) {
     int initialColor = Random().nextInt(360);
+    if (num == 0) {
+      num = 10;
+    }
+
     int increment = 360 ~/ num;
     List<Color> hsls = [];
     // Color color = const Color(0x00000119); //AARRGGBB
@@ -656,8 +660,25 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     return color;
   }
 
+  String numberFormat(double total) {
+    var f = NumberFormat("###,###,###.00", "vi_VN");
+    return f.format(total);
+  }
+
   Widget _buildChart(int option, String label) {
     List<PieChartSectionData> listPies = showingSectionsChart(option);
+    double total = 0;
+    for (int i = 0; i < chartDatas.length; i++) {
+      if (option == 0) {
+        //valuePercent = chartDatas[i].percentProfit;
+        total += chartDatas[i].profit;
+      } else if (option == 1) {
+        total += chartDatas[i].total;
+      } else if (option == 2) {
+        total += chartDatas[i].totalHasProfit;
+      }
+    }
+
     return listPies.isEmpty
         ? const SizedBox(
             height: 5,
@@ -665,6 +686,9 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
         : Column(children: [
             const SizedBox(height: 10),
             _buildHeadline(label, Colors.lime),
+            Text("Tổng: " + numberFormat(total),
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             Card(
               color: Colors.white,
               child: Row(
@@ -906,6 +930,16 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
     // return card;
   }
 
+  Widget _buildBarCustomNumber() {
+    List<Widget> listBarCustomNumber = [];
+    for (int i = 0; i < fieldsNumber.length; i++) {
+      String customFieldId = fieldsNumber[i].id;
+      String customFieldName = fieldsNumber[i].name;
+      listBarCustomNumber.add(_buildBar(customFieldId, customFieldName));
+    }
+    return Column(children: listBarCustomNumber);
+  }
+
   void _goToChildren() {
     //showInSnackBar(categoryChooseId);
     // if (mapCategories[categoryChooseId]!.isParent == true) {
@@ -920,7 +954,7 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
               indexTab: 1),
         ));
     // } else {
-    showInSnackBar("Không có danh mục con");
+    //showInSnackBar("Không có danh mục con");
     // }
   }
 
@@ -1017,7 +1051,7 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
             : const Text(''),
         const SizedBox(height: 10),
         //const Text('Số lượng công việc'),
-        _buildHeadline('Thống kê chung', Colors.lightBlue),
+        // _buildHeadline('Thống kê chung', Colors.lightBlue),
         _buildChart(1, 'Số Lượng Công Việc'),
 
         // const SizedBox(height: 10),
@@ -1028,7 +1062,9 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
         // const SizedBox(height: 10),
         // const Text('Lợi ích (Triệu Đồng)'),
         _buildChart(0, 'Lợi ích (Triệu Đồng)'),
-        _buildChartCustomNumber(),
+
+        _buildBarCustomNumber(),
+        // _buildChartCustomNumber(),
         // const Text('Custom Field'),
 
         // Tạm thời bỏ đi vậy
@@ -1304,4 +1340,321 @@ class _ChartSameCodeScreenState extends State<ChartSameCodeScreen>
   @override
   // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
+
+  final Color barBackgroundColor = const Color(0xff72d8bf);
+  final Duration animDuration = const Duration(milliseconds: 250);
+  final List<Color> availableColors = const [
+    Colors.purpleAccent,
+    Colors.yellow,
+    Colors.lightBlue,
+    Colors.orange,
+    Colors.pink,
+    Colors.redAccent,
+  ];
+  // int touchedIndex = -1;
+
+  bool isPlaying = false;
+  Widget _buildBar(String customFieldId, String customFieldName) {
+    List<Widget> listChartBar = [];
+    double total = 0.0;
+    for (int i = 0; i < mapDatasCustomFieldNumber[customFieldId]!.length; i++) {
+      total += mapDatasCustomFieldNumber[customFieldId]![i].profit / 1;
+
+      // if (nameItem.length >= 4 && nameItem.length <= 6) {
+      //   nameItem = (double.parse(nameItem) / 1000).toStringAsFixed(2) + "K";
+      // } else if (nameItem.length > 6) {
+      //   nameItem = (double.parse(nameItem) / 1000000).toStringAsFixed(2) + "M";
+      // }
+    }
+    // String textTotal = total.toString();
+
+    Widget card = Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      color: const Color(0xff81e5cd),
+      child: Stack(
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
+              children: <Widget>[
+                // Text(
+                //   customFieldName,
+                //   style: const TextStyle(
+                //       color: Color(0xff0f4a3c),
+                //       fontSize: 24,
+                //       fontWeight: FontWeight.bold),
+                // ),
+                // const SizedBox(
+                //   height: 4,
+                // ),
+                Text(
+                  'Tổng: ' + numberFormat(total),
+                  style: const TextStyle(
+                      color: Color(0xff379982),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(
+                  height: 38,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: BarChart(
+                      isPlaying ? randomData() : mainBarDataCN(customFieldId),
+                      swapAnimationDuration: animDuration,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 12,
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                icon: Icon(
+                  isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: const Color(0xff0f4a3c),
+                ),
+                onPressed: () {
+                  setState(() {
+                    isPlaying = !isPlaying;
+                    if (isPlaying) {
+                      refreshState();
+                    }
+                  });
+                },
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+    //listChartBar.add(card);
+    //return Column(children: listChartBar);
+    // return Container(height: 350, child: card);
+
+    return Column(children: [
+      _buildHeadline(customFieldName, Colors.lime),
+      Container(height: 300, child: card),
+      SizedBox(height: 20),
+    ]);
+    // return card;
+  }
+
+  BarChartGroupData makeGroupData(
+    int x,
+    double y, {
+    bool isTouched = false,
+    Color barColor = Colors.white,
+    double width = 22,
+    List<int> showTooltips = const [],
+  }) {
+    return BarChartGroupData(
+      x: x,
+      barRods: [
+        BarChartRodData(
+          y: isTouched ? y + 1 : y,
+          colors: isTouched ? [Colors.yellow] : [barColor],
+          width: width,
+          borderSide: isTouched
+              ? const BorderSide(color: Colors.yellowAccent, width: 1)
+              : const BorderSide(color: Colors.white, width: 0),
+          backDrawRodData: BackgroundBarChartRodData(
+            show: true,
+            y: 20,
+            colors: [barBackgroundColor],
+          ),
+        ),
+      ],
+      showingTooltipIndicators: showTooltips,
+    );
+  }
+
+  // dữ liệu đây nhé :)
+
+  List<BarChartGroupData> showingGroupsCN(int option, String customField) {
+    List<BarChartGroupData> lists = [];
+    double valuePercent = 0;
+    String nameItem = "";
+
+    for (int i = 0; i < mapDatasCustomFieldNumber[customField]!.length; i++) {
+      lists.add(makeGroupData(
+          i, mapDatasCustomFieldNumber[customField]![i].profit / 1,
+          isTouched: i == touchedIndex, barColor: chooseColor(i)));
+      // if (nameItem.length >= 4 && nameItem.length <= 6) {
+      //   nameItem = (double.parse(nameItem) / 1000).toStringAsFixed(2) + "K";
+      // } else if (nameItem.length > 6) {
+      //   nameItem = (double.parse(nameItem) / 1000000).toStringAsFixed(2) + "M";
+      // }
+    }
+    return lists;
+  }
+
+  BarChartData mainBarDataCN(String customField) {
+    return BarChartData(
+      barTouchData: BarTouchData(
+        touchTooltipData: BarTouchTooltipData(
+            tooltipBgColor: Colors.blueGrey,
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              String weekDay;
+              weekDay =
+                  mapDatasCustomFieldNumber[customField]![group.x.toInt()].name;
+              return BarTooltipItem(
+                weekDay + '\n',
+                const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+                children: <TextSpan>[
+                  TextSpan(
+                    text: numberFormat(rod.y - 1),
+                    style: const TextStyle(
+                      color: Colors.yellow,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              );
+            }),
+        touchCallback: (FlTouchEvent event, barTouchResponse) {
+          setState(() {
+            if (!event.isInterestedForInteractions ||
+                barTouchResponse == null ||
+                barTouchResponse.spot == null) {
+              touchedIndex = -1;
+              return;
+            }
+            touchedIndex = barTouchResponse.spot!.touchedBarGroupIndex;
+          });
+        },
+      ),
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles: SideTitles(showTitles: false),
+        topTitles: SideTitles(showTitles: false),
+        bottomTitles: SideTitles(
+          showTitles: true,
+          getTextStyles: (context, value) => const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+          margin: 16,
+          getTitles: (double value) {
+            String name =
+                mapDatasCustomFieldNumber[customField]![value.toInt()].name;
+            return name.substring(0, 1);
+          },
+        ),
+        leftTitles: SideTitles(
+          showTitles: false,
+        ),
+      ),
+      borderData: FlBorderData(
+        show: false,
+      ),
+      barGroups: showingGroupsCN(0, customField),
+      gridData: FlGridData(show: false),
+    );
+  }
+
+  BarChartData randomData() {
+    return BarChartData(
+      barTouchData: BarTouchData(
+        enabled: false,
+      ),
+      titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: SideTitles(
+            showTitles: true,
+            getTextStyles: (context, value) => const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+            margin: 16,
+            getTitles: (double value) {
+              switch (value.toInt()) {
+                case 0:
+                  return 'M';
+                case 1:
+                  return 'T';
+                case 2:
+                  return 'W';
+                case 3:
+                  return 'T';
+                case 4:
+                  return 'F';
+                case 5:
+                  return 'S';
+                case 6:
+                  return 'S';
+                default:
+                  return '';
+              }
+            },
+          ),
+          leftTitles: SideTitles(
+            showTitles: false,
+          ),
+          topTitles: SideTitles(
+            showTitles: false,
+          ),
+          rightTitles: SideTitles(
+            showTitles: false,
+          )),
+      borderData: FlBorderData(
+        show: false,
+      ),
+      barGroups: List.generate(7, (i) {
+        switch (i) {
+          case 0:
+            return makeGroupData(0, Random().nextInt(15).toDouble() + 6,
+                barColor:
+                    availableColors[Random().nextInt(availableColors.length)]);
+          case 1:
+            return makeGroupData(1, Random().nextInt(15).toDouble() + 6,
+                barColor:
+                    availableColors[Random().nextInt(availableColors.length)]);
+          case 2:
+            return makeGroupData(2, Random().nextInt(15).toDouble() + 6,
+                barColor:
+                    availableColors[Random().nextInt(availableColors.length)]);
+          case 3:
+            return makeGroupData(3, Random().nextInt(15).toDouble() + 6,
+                barColor:
+                    availableColors[Random().nextInt(availableColors.length)]);
+          case 4:
+            return makeGroupData(4, Random().nextInt(15).toDouble() + 6,
+                barColor:
+                    availableColors[Random().nextInt(availableColors.length)]);
+          case 5:
+            return makeGroupData(5, Random().nextInt(15).toDouble() + 6,
+                barColor:
+                    availableColors[Random().nextInt(availableColors.length)]);
+          case 6:
+            return makeGroupData(6, Random().nextInt(15).toDouble() + 6,
+                barColor:
+                    availableColors[Random().nextInt(availableColors.length)]);
+          default:
+            return throw Error();
+        }
+      }),
+      gridData: FlGridData(show: false),
+    );
+  }
+
+  Future<dynamic> refreshState() async {
+    setState(() {});
+    await Future<dynamic>.delayed(
+        animDuration + const Duration(milliseconds: 50));
+    if (isPlaying) {
+      await refreshState();
+    }
+  }
 }

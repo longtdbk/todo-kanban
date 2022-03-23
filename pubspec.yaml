@@ -75,6 +75,9 @@ flutter:
     - assets/images/
     - assets/images/splashscreen.png
     - assets/images/todo_kanban.png
+    - assets/images/login_1.png
+    - assets/images/login_2.png
+    - assets/images/inside.png
     - packages/shrine_images/0-0.jpg
     - packages/shrine_images/1-0.jpg
     - packages/shrine_images/2-0.jpg

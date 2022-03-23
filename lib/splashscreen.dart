@@ -48,8 +48,10 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Center(
         child: Column(children: [
           SizedBox(height: MediaQuery.of(context).size.height / 4),
-          Image.asset('assets/images/todo_kanban.png',
-              width: 150, height: 150, fit: BoxFit.cover),
+          Image.asset('assets/images/splashscreen.png',
+              width: MediaQuery.of(context).size.width * 0.8,
+              height: MediaQuery.of(context).size.width * 0.7,
+              fit: BoxFit.fitWidth),
           const SizedBox(height: 20),
           const CircularProgressIndicator(),
         ]),

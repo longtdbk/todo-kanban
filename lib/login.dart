@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 
 // Copyright 2019 The Flutter team. All rights reserved.
@@ -24,7 +25,8 @@ class LoginScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        //title: Text('Login'),
+        centerTitle: true,
+        title: const Text('Đăng nhập/ Đăng ký'),
       ),
       body: const LoginField(),
     );
@@ -162,81 +164,118 @@ class LoginFieldState extends State<LoginField> with RestorationMixin {
     return null;
   }
 
+  Widget _buildCarousel() {
+    Image imgLogin1 = Image.asset('assets/images/login_1.png',
+        width: MediaQuery.of(context).size.width * 0.8,
+        height: MediaQuery.of(context).size.height * 0.35,
+        fit: BoxFit.fitHeight);
+    Image imgLogin2 = Image.asset('assets/images/login_2.png',
+        width: MediaQuery.of(context).size.width * 0.8,
+        height: MediaQuery.of(context).size.height * 0.35,
+        fit: BoxFit.fitHeight);
+
+    List<Widget> imageSliders = [];
+    imageSliders.add(imgLogin1);
+    imageSliders.add(imgLogin2);
+
+    return Center(
+        child: CarouselSlider(
+            items: imageSliders,
+            // carouselController: _controller,
+            options: CarouselOptions(
+              autoPlay: true,
+              enlargeCenterPage: true,
+              height: MediaQuery.of(context).size.height * 0.35,
+              // aspectRatio: 2.0,
+              enableInfiniteScroll: false, // muốn sang trái sang phải ok
+              // onPageChanged: (index, reason) {
+              //   setState(() {
+              //     _current = index;
+              //   });
+              // }),
+            )));
+  }
+
   @override
   Widget build(BuildContext context) {
-    const sizedBoxSpace = SizedBox(height: 24);
+    const sizedBoxSpace = SizedBox(height: 10);
     const sizedBoxWidth = SizedBox(width: 18);
 
-    return Form(
-      key: _formKey,
-      autovalidateMode: AutovalidateMode.values[_autoValidateModeIndex.value],
-      child: Scrollbar(
-        child: SingleChildScrollView(
-          restorationId: 'text_field_demo_scroll_view',
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              sizedBoxSpace,
-              TextFormField(
-                restorationId: 'email_field',
-                textInputAction: TextInputAction.next,
-                focusNode: _email,
-                decoration: const InputDecoration(
-                  filled: true,
-                  icon: Icon(Icons.email),
-                  hintText: 'Địa chỉ email của bạn',
-                  labelText: 'Email',
+    return SingleChildScrollView(
+        child: Column(children: [
+      // SizedBox(height: 10),
+      _buildCarousel(),
+      Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.values[_autoValidateModeIndex.value],
+        child: Scrollbar(
+          child: SingleChildScrollView(
+            restorationId: 'text_field_demo_scroll_view',
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                //sizedBoxSpace,
+                TextFormField(
+                  restorationId: 'email_field',
+                  textInputAction: TextInputAction.next,
+                  focusNode: _email,
+                  decoration: const InputDecoration(
+                    filled: true,
+                    icon: Icon(Icons.email),
+                    hintText: 'Địa chỉ email của bạn',
+                    labelText: 'Email',
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  onSaved: (value) {
+                    person.email = value!;
+                    _password!.requestFocus();
+                  },
                 ),
-                keyboardType: TextInputType.emailAddress,
-                onSaved: (value) {
-                  person.email = value!;
-                  _password!.requestFocus();
-                },
-              ),
-              sizedBoxSpace,
-              PasswordField(
-                restorationId: 'password_field',
-                textInputAction: TextInputAction.next,
-                focusNode: _password,
-                fieldKey: _passwordFieldKey,
-                helperText: 'Nhấn ẩn/hiện mật khẩu',
-                labelText: 'Mật khẩu',
-                validator: _validatePassword,
-                onSaved: (value) {
-                  setState(() {
-                    person.password = value!;
-                  }
-                      //  _handleSubmitted();
-                      );
-                },
-              ),
-              sizedBoxSpace,
-              !isLoading
-                  ? Center(
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                          ElevatedButton(
-                            onPressed: _handleSubmitted,
-                            child: const Text('Đăng nhập'),
-                          ),
-                          sizedBoxWidth,
-                          ElevatedButton(
-                            onPressed: _routeToRegister,
-                            child: const Text('Đăng ký'),
-                          ),
-                        ]))
-                  : const Center(child: CircularProgressIndicator()),
-              sizedBoxSpace,
-              Text(
-                '* Các trường bắt buộc',
-                style: Theme.of(context).textTheme.caption,
-              ),
-              sizedBoxSpace,
-            ],
+                sizedBoxSpace,
+                PasswordField(
+                  restorationId: 'password_field',
+                  textInputAction: TextInputAction.next,
+                  focusNode: _password,
+                  fieldKey: _passwordFieldKey,
+                  helperText: 'Nhấn ẩn/hiện mật khẩu',
+                  labelText: 'Mật khẩu',
+                  validator: _validatePassword,
+                  onSaved: (value) {
+                    setState(() {
+                      person.password = value!;
+                    }
+                        //  _handleSubmitted();
+                        );
+                  },
+                ),
+                sizedBoxSpace,
+                !isLoading
+                    ? Center(
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                            ElevatedButton(
+                              onPressed: _handleSubmitted,
+                              child: const Text('Đăng nhập'),
+                            ),
+                            sizedBoxWidth,
+                            ElevatedButton(
+                              onPressed: _routeToRegister,
+                              child: const Text('Đăng ký'),
+                            ),
+                          ]))
+                    : const Center(child: CircularProgressIndicator()),
+                // sizedBoxSpace,
+                // Text(
+                //   '* Các trường bắt buộc',
+                //   style: Theme.of(context).textTheme.caption,
+                // ),
+                // sizedBoxSpace,
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      )
+    ]));
   }
 }

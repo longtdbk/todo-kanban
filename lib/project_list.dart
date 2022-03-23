@@ -377,6 +377,7 @@ class ProjectListState extends State<ProjectList> {
       for (int index = 0; index < projects.length; index++) {
         //ProjectData project = (ProjectData)projects[i];
         ListTile item = ListTile(
+          // tileColor: Colors.blue[100],
           leading: ExcludeSemantics(
             child: CircleAvatar(child: Text('${index + 1}')),
           ),
@@ -387,31 +388,6 @@ class ProjectListState extends State<ProjectList> {
               ? const Text('Dự án được chia sẻ')
               : const Text('Dự án quản lý'),
           trailing: _createMenuProject(index),
-          // onTap: () => {
-          //       if (!projects[index].isShared)
-          //         {
-          //           Navigator.push(
-          //             context,
-          //             MaterialPageRoute(
-          //               builder: (context) =>
-          //                   ProjectSingle(project: projects[index]),
-          //             ),
-          //           )
-          //         }
-          //       else
-          //         {
-          //           if (projects[index].permissionShare == "edit")
-          //             {
-          //               Navigator.push(
-          //                   context,
-          //                   MaterialPageRoute(
-          //                     builder: (context) => TaskListScreen(
-          //                         projectId: projects[index].id,
-          //                         categoryId: projects[index].categoryShare),
-          //                   ))
-          //             }
-          //         }
-          //     }
         );
 
         list.add(item);
@@ -433,19 +409,30 @@ class ProjectListState extends State<ProjectList> {
   Widget build(BuildContext context) {
     //const sizedBoxSpace = SizedBox(height: 24);
     //const sizedBoxWidth = SizedBox(width: 18);
-
+    Image imgInside = Image.asset('assets/images/inside.png',
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.5,
+        fit: BoxFit.fitHeight);
+    Column col = Column(children: [
+      SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+      Center(child: imgInside)
+    ]);
     return RefreshIndicator(
         onRefresh: () async {
           //Do whatever you want on refrsh.Usually update the date of the listview
           getAllProjects();
         },
         child: Scrollbar(
-          child: ListView(
-            restorationId: 'project_list_view',
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            children: buildList(),
-          ),
-        ),
+            child: Stack(
+          children: [
+            col,
+            ListView(
+              restorationId: 'project_list_view',
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              children: buildList(),
+            ),
+          ],
+        )),
         color: Colors.white,
         backgroundColor: Colors.red);
   }
