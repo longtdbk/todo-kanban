@@ -170,11 +170,11 @@ class ProjectSingleState extends State<ProjectSingle> {
   // }
 
   Widget _buildManagerCategory() {
+    var name = widget.project!.name;
     return Scaffold(
         appBar: AppBar(
-          title: const Text(
-            'Dự án',
-          ),
+          title: Text(name.substring(0, 1) +
+              name.substring(1, name.length).toLowerCase()),
         ),
         body: Center(
             child: ProjectCategoryScreen(

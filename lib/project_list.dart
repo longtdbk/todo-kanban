@@ -59,8 +59,15 @@ class ProjectList extends StatefulWidget {
 class ProjectListState extends State<ProjectList> {
   var projects = [];
   var prefs;
+  List<ProjectShareData> projectShares = [];
   UserData userData = UserData();
   bool isLoading = false;
+
+  bool isLoadingBottom = false;
+  String userEmail = '';
+
+  String emailShare = '';
+  String sharePermission = 'view';
 
   @override
   void initState() {
@@ -229,9 +236,102 @@ class ProjectListState extends State<ProjectList> {
     }
   }
 
+  Future<void> addProjectShare(
+      int index, String email, String permission) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final response = await http.post(
+        Uri.parse('http://www.vietinrace.com/srvTD/addProjectSharePost/'),
+        headers: {
+          //'Content-Type': 'application/json; charset=UTF-8',
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        encoding: Encoding.getByName('utf-8'),
+        body: {
+          'email': email,
+          'category': '',
+          'project': projects[index].id,
+          'permission': permission
+        });
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var status = json['data'][0]['status'];
+      var msg = json['data'][0]['msg'];
+      if (status == "true") {
+        //getProject();
+      }
+      showInSnackBar(msg);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  Future<void> getProjectShare(int index) async {
+    projectShares = [];
+    setState(() {
+      isLoadingBottom = true;
+    });
+
+    var url = 'http://www.vietinrace.com/srvTD/getProjectShareByID/' +
+        projects[index].id +
+        "/" +
+        '0';
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoadingBottom = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+
+      for (var dat in data) {
+        ProjectShareData projectShareData = ProjectShareData();
+        projectShareData.id = dat['id'];
+        projectShareData.category = dat['category'];
+        projectShareData.email = dat['email'];
+        projectShareData.permission = dat['permission'];
+        projectShares.add(projectShareData);
+      }
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
+  Future<void> removeProjectShare(String projectShareId) async {
+    projectShares = [];
+    setState(() {
+      isLoadingBottom = true;
+    });
+
+    var url =
+        'http://www.vietinrace.com/srvTD/removeProjectShare/' + projectShareId;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoadingBottom = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      var msg = data[0]['msg'];
+      showInSnackBar(msg);
+      Navigator.pop(context);
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
+  }
+
   void _routeToAddProject() {
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (BuildContext context) => const ProjectAddScreen()));
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (BuildContext context) => const ProjectAdd()));
   }
 
   void _routeToManageTask(int index) {
@@ -321,6 +421,143 @@ class ProjectListState extends State<ProjectList> {
     }
   }
 
+  List<Widget> _buildListShare() {
+    List<Widget> list = [];
+    if (isLoadingBottom) {
+      list.add(const Center(child: LinearProgressIndicator()));
+    } else {
+      for (int index = 0; index < projectShares.length; index++) {
+        //ProjectData project = (ProjectData)projects[i];
+        ListTile item = ListTile(
+          leading: ExcludeSemantics(
+            child: CircleAvatar(child: Text('${index + 1}')),
+          ),
+          title: Text(
+            projectShares[index].email,
+          ),
+          subtitle: Text(projectShares[index].permission),
+          trailing: _createMenuProjectShare(index),
+        );
+        list.add(item);
+      }
+    }
+
+    return list;
+  }
+
+  Future<void> _showListShare(int index) async {
+    await getProjectShare(index);
+    await Future.delayed(Duration.zero);
+    showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) {
+          return SingleChildScrollView(child: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+            return SizedBox(
+                height: 500,
+                child: Column(children: [
+                  SizedBox(
+                    height: 300,
+                    child: ListView(
+                      shrinkWrap: true,
+                      restorationId: 'logs_list_view',
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      children: _buildListShare(),
+                    ),
+                  ),
+                  FloatingActionButton(
+                    onPressed: () {
+                      //_routeToAddProject();
+                      _showAddShare(index, '');
+                    },
+                    tooltip: 'Chia sẻ',
+                    child: const Icon(Icons.add),
+                  )
+                ]));
+          }));
+        });
+  }
+
+  Future<void> addShareProject(int index) async {
+    addProjectShare(index, emailShare, sharePermission);
+    Navigator.pop(context);
+    Navigator.pop(context);
+  }
+
+  void _showAddShare(int index, String key) {
+    List<DropdownMenuItem<String>> menu = [];
+
+    var menuItem = const DropdownMenuItem<String>(
+      value: "view",
+      child: Text("Quyền Xem"),
+    );
+    menu.add(menuItem);
+
+    var menuItem2 = const DropdownMenuItem<String>(
+      value: "edit",
+      child: Text("Quyền Sửa"),
+    );
+    menu.add(menuItem2);
+    //String statusChoice = "view";
+
+    // Column column = Column(children: [
+
+    // ],)
+
+    showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) {
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+            return SizedBox(
+              height: 500,
+              child: SingleChildScrollView(
+                  child: Column(children: <Widget>[
+                Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: TextField(
+                      onChanged: (value) => {emailShare = value},
+                      //controller: editingController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Nhập email ',
+                      ),
+                    )),
+                Row(
+                  children: [
+                    const SizedBox(width: 20),
+                    const Text("Chọn mức phân quyền"),
+                    const SizedBox(width: 20),
+                    DropdownButton<String>(
+                        value: sharePermission,
+                        icon: const Icon(Icons.arrow_downward),
+                        elevation: 16,
+                        style: const TextStyle(color: Colors.deepPurple),
+                        underline: Container(
+                          height: 2,
+                          color: Colors.deepPurpleAccent,
+                        ),
+                        onChanged: (String? newValue) {
+                          //statusChoice = newValue!;
+                          setState(() {
+                            sharePermission = newValue!;
+                          });
+                        },
+                        items: menu),
+                  ],
+                ),
+                ElevatedButton(
+                  onPressed: () => addShareProject(index),
+                  child: const Text('Thêm'),
+                )
+              ])),
+            );
+          });
+        });
+  }
+
   Widget _createMenuProject(int index) {
     List<PopupMenuEntry<String>> menu = [];
     if (!projects[index].isShared) {
@@ -338,6 +575,13 @@ class ProjectListState extends State<ProjectList> {
               // leading: const Icon(Icons.visibility),
               title: Text('Quản trị Công việc')));
       menu.add(menuItem2);
+
+      var menuItem4 = const PopupMenuItem<String>(
+          value: 'assign_project',
+          child: ListTile(
+              // leading: const Icon(Icons.visibility),
+              title: Text('Phân quyền dự án')));
+      menu.add(menuItem4);
     } else if (projects[index].permissionShare == 'edit') {
       var menuItem2 = const PopupMenuItem<String>(
           value: 'task_list',
@@ -363,6 +607,38 @@ class ProjectListState extends State<ProjectList> {
           {_routeToManageTask(index)}
         else if (value == "view_chart")
           {_routeToChart(index)}
+        else if (value == "assign_project")
+          {_showListShare(index)}
+      },
+      itemBuilder: (context) => menu,
+    );
+    return popUpMenu;
+  }
+
+  Widget _createMenuProjectShare(int index) {
+    List<PopupMenuEntry<String>> menu = [];
+    var menuItem = const PopupMenuItem<String>(
+      value: 'edit',
+      child: ListTile(
+          // leading: const Icon(Icons.visibility),
+          title: Text('Sửa')),
+    );
+    menu.add(menuItem);
+
+    var menuItem2 = const PopupMenuItem<String>(
+        value: 'remove',
+        child: ListTile(
+            // leading: const Icon(Icons.visibility),
+            title: Text('Xóa')));
+    menu.add(menuItem2);
+
+    var popUpMenu = PopupMenuButton<String>(
+      padding: EdgeInsets.zero,
+      onSelected: (value) => {
+        if (value == "edit")
+          {}
+        else if (value == "remove")
+          {removeProjectShare(projectShares[index].id)}
       },
       itemBuilder: (context) => menu,
     );
@@ -410,7 +686,7 @@ class ProjectListState extends State<ProjectList> {
     //const sizedBoxSpace = SizedBox(height: 24);
     //const sizedBoxWidth = SizedBox(width: 18);
     Image imgInside = Image.asset('assets/images/inside.png',
-        width: MediaQuery.of(context).size.width * 0.9,
+        width: MediaQuery.of(context).size.width * 0.96,
         height: MediaQuery.of(context).size.height * 0.5,
         fit: BoxFit.fitHeight);
     Column col = Column(children: [

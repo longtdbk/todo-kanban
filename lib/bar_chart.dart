@@ -1,6 +1,14 @@
+import 'dart:convert';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
+
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+
+import 'helper/categories_data.dart';
+import 'helper/chart_data.dart';
 
 class BarChartSample extends StatefulWidget {
   const BarChartSample({Key? key}) : super(key: key);
@@ -18,6 +26,14 @@ class BarChartSampleState extends State<BarChartSample> {
   late List<BarChartGroupData> showingBarGroups;
 
   int touchedGroupIndex = -1;
+
+  var prefs;
+  UserProjectsInfoData userProjectsInfoData = UserProjectsInfoData();
+  bool isLoading = false;
+
+  var countProjects = '';
+  var countUsers = '';
+  var countTasks = '';
 
   @override
   void initState() {
@@ -43,30 +59,88 @@ class BarChartSampleState extends State<BarChartSample> {
     rawBarGroups = items;
 
     showingBarGroups = rawBarGroups;
+    getProjectInfo();
+  }
+
+  void showInSnackBar(String value) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(value),
+    ));
+  }
+
+  Future<void> getProjectInfo() async {
+    setState(() {
+      isLoading = true;
+    });
+    prefs = await SharedPreferences.getInstance();
+    // final prefs = await SharedPreferences.getInstance();
+
+    var url = 'http://www.vietinrace.com/srvTD/getProjectInfo/' +
+        prefs.getString('email')!;
+    final response = await http.get(Uri.parse(url));
+
+    setState(() {
+      isLoading = false;
+    });
+    if (response.statusCode == 200) {
+      var json = jsonDecode(response.body);
+      var data = json['data'];
+      for (var dat in data) {
+        userProjectsInfoData = UserProjectsInfoData();
+        userProjectsInfoData.tasks = int.parse(dat['tasks']);
+        userProjectsInfoData.projects = int.parse(dat['projects']);
+        userProjectsInfoData.users = int.parse(dat['users']);
+        userProjectsInfoData.projectsShare = int.parse(dat['projects_share']);
+        userProjectsInfoData.tasksShare = int.parse(dat['tasks_share']);
+        //userProjectsInfoDatas.add(userProjectsInfoData);
+      }
+    } else {
+      showInSnackBar("Có lỗi xảy ra , có thể do kết nối mạng !");
+    }
   }
 
   Widget _buildCardInfo() {
+    countProjects = '';
+    countUsers = '';
+    countTasks = '';
+
+    if (userProjectsInfoData.projects == 0) {
+      countProjects += userProjectsInfoData.projectsShare.toString() + ' Dự án';
+      countUsers += userProjectsInfoData.users.toString() + ' Người dùng';
+      countTasks += userProjectsInfoData.tasksShare.toString() + ' Công việc';
+    } else {
+      countProjects += userProjectsInfoData.projects.toString() + ' Dự án';
+      countUsers += userProjectsInfoData.users.toString() + ' Người dùng';
+      countTasks += userProjectsInfoData.tasks.toString() + ' Công việc';
+    }
+
     return Container(
       height: 200, width: 150,
-      child: Card(
-          elevation: 10,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15.0),
-          ),
-          color: Colors.lightBlue,
-          child: Column(
-            children: const [
-              SizedBox(height: 25),
-              Text('2 Dự án',
-                  style: TextStyle(color: Colors.white, fontSize: 30)),
-              SizedBox(height: 25),
-              Text('8 Users',
-                  style: TextStyle(color: Colors.white, fontSize: 25)),
-              SizedBox(height: 25),
-              Text('30 Tasks',
-                  style: TextStyle(color: Colors.white, fontSize: 20)),
-            ],
-          )),
+      child: isLoading
+          ? const LinearProgressIndicator()
+          : Card(
+              elevation: 10,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+              color: Colors.lightBlue,
+              child: Column(
+                children: [
+                  const SizedBox(height: 25),
+                  Text(countProjects,
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 30)),
+                  const SizedBox(height: 25),
+                  Text(countUsers,
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 20)),
+                  const SizedBox(height: 25),
+                  Text(countTasks,
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 20)),
+                ],
+              )),
       // Transform.rotate(
       //     angle: 15 * pi / 180, child: Text("flutter is awesome"))),
     );
@@ -92,178 +166,24 @@ class BarChartSampleState extends State<BarChartSample> {
 
   @override
   Widget build(BuildContext context) {
-    // return AspectRatio(
-    //   aspectRatio: 1,
-    //   child: Card(
-    //     elevation: 0,
-    //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-    //     color: const Color(0xff2c4260),
-    //     child: Padding(
-    //       padding: const EdgeInsets.all(16),
-    //       child: Column(
-    //         crossAxisAlignment: CrossAxisAlignment.stretch,
-    //         mainAxisAlignment: MainAxisAlignment.start,
-    //         mainAxisSize: MainAxisSize.max,
-    //         children: <Widget>[
-    //           Row(
-    //             crossAxisAlignment: CrossAxisAlignment.center,
-    //             mainAxisSize: MainAxisSize.min,
-    //             mainAxisAlignment: MainAxisAlignment.start,
-    //             children: <Widget>[
-    //               makeTransactionsIcon(),
-    //               const SizedBox(
-    //                 width: 38,
-    //               ),
-    //               const Text(
-    //                 'Transactions',
-    //                 style: TextStyle(color: Colors.white, fontSize: 22),
-    //               ),
-    //               const SizedBox(
-    //                 width: 4,
-    //               ),
-    //               const Text(
-    //                 'state',
-    //                 style: TextStyle(color: Color(0xff77839a), fontSize: 16),
-    //               ),
-    //             ],
-    //           ),
-    //           const SizedBox(
-    //             height: 38,
-    //           ),
-    //           Expanded(
-    //             child: BarChart(
-    //               BarChartData(
-    //                 maxY: 20,
-    //                 barTouchData: BarTouchData(
-    //                     touchTooltipData: BarTouchTooltipData(
-    //                       tooltipBgColor: Colors.grey,
-    //                       getTooltipItem: (_a, _b, _c, _d) => null,
-    //                     ),
-    //                     touchCallback: (FlTouchEvent event, response) {
-    //                       if (response == null || response.spot == null) {
-    //                         setState(() {
-    //                           touchedGroupIndex = -1;
-    //                           showingBarGroups = List.of(rawBarGroups);
-    //                         });
-    //                         return;
-    //                       }
-
-    //                       touchedGroupIndex =
-    //                           response.spot!.touchedBarGroupIndex;
-
-    //                       setState(() {
-    //                         if (!event.isInterestedForInteractions) {
-    //                           touchedGroupIndex = -1;
-    //                           showingBarGroups = List.of(rawBarGroups);
-    //                           return;
-    //                         }
-    //                         showingBarGroups = List.of(rawBarGroups);
-    //                         if (touchedGroupIndex != -1) {
-    //                           var sum = 0.0;
-    //                           for (var rod
-    //                               in showingBarGroups[touchedGroupIndex]
-    //                                   .barRods) {
-    //                             sum += rod.y;
-    //                           }
-    //                           final avg = sum /
-    //                               showingBarGroups[touchedGroupIndex]
-    //                                   .barRods
-    //                                   .length;
-
-    //                           showingBarGroups[touchedGroupIndex] =
-    //                               showingBarGroups[touchedGroupIndex].copyWith(
-    //                             barRods: showingBarGroups[touchedGroupIndex]
-    //                                 .barRods
-    //                                 .map((rod) {
-    //                               return rod.copyWith(y: avg);
-    //                             }).toList(),
-    //                           );
-    //                         }
-    //                       });
-    //                     }),
-    //                 titlesData: FlTitlesData(
-    //                   show: true,
-    //                   rightTitles: SideTitles(showTitles: false),
-    //                   topTitles: SideTitles(showTitles: false),
-    //                   bottomTitles: SideTitles(
-    //                     showTitles: true,
-    //                     getTextStyles: (context, value) => const TextStyle(
-    //                         color: Color(0xff7589a2),
-    //                         fontWeight: FontWeight.bold,
-    //                         fontSize: 14),
-    //                     margin: 20,
-    //                     getTitles: (double value) {
-    //                       switch (value.toInt()) {
-    //                         case 0:
-    //                           return 'Mn';
-    //                         case 1:
-    //                           return 'Te';
-    //                         case 2:
-    //                           return 'Wd';
-    //                         case 3:
-    //                           return 'Tu';
-    //                         case 4:
-    //                           return 'Fr';
-    //                         case 5:
-    //                           return 'St';
-    //                         case 6:
-    //                           return 'Sn';
-    //                         default:
-    //                           return '';
-    //                       }
-    //                     },
-    //                   ),
-    //                   leftTitles: SideTitles(
-    //                     showTitles: true,
-    //                     getTextStyles: (context, value) => const TextStyle(
-    //                         color: Color(0xff7589a2),
-    //                         fontWeight: FontWeight.bold,
-    //                         fontSize: 14),
-    //                     margin: 8,
-    //                     reservedSize: 28,
-    //                     interval: 1,
-    //                     getTitles: (value) {
-    //                       if (value == 0) {
-    //                         return '1K';
-    //                       } else if (value == 10) {
-    //                         return '5K';
-    //                       } else if (value == 19) {
-    //                         return '10K';
-    //                       } else {
-    //                         return '';
-    //                       }
-    //                     },
-    //                   ),
-    //                 ),
-    //                 borderData: FlBorderData(
-    //                   show: false,
-    //                 ),
-    //                 barGroups: showingBarGroups,
-    //                 gridData: FlGridData(show: false),
-    //               ),
-    //             ),
-    //           ),
-    //           const SizedBox(
-    //             height: 12,
-    //           ),
-    //         ],
-    //       ),
-    //     ),
-    //   ),
-    // );
     return Scaffold(
         //Color.fromRGBO(70, 49, 179,0) Color.fromARGB(179, 70, 49, 255)
 
         backgroundColor: const Color(
             0xff4631b3), //Color.fromRGBO(70, 49, 179, 300), //(a, r, g, b)#4631b3
-        body: Center(
-            child: Stack(
-          children: [
-            _buildCardColorRotate(25, Colors.lightGreen),
-            _buildCardColorRotate(10, Colors.redAccent),
-            _buildCardInfo()
-          ],
-        )));
+        body: RefreshIndicator(
+            onRefresh: () async {
+              getProjectInfo();
+            },
+            child: Scrollbar(
+                child: Center(
+                    child: Stack(
+              children: [
+                _buildCardColorRotate(25, Colors.lightGreen),
+                _buildCardColorRotate(10, Colors.redAccent),
+                _buildCardInfo()
+              ],
+            )))));
   }
 
   BarChartGroupData makeGroupData(int x, double y1, double y2) {

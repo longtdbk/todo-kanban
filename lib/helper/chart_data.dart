@@ -18,3 +18,11 @@ class ChartDataMonth {
   int profit = 0;
   //double percentProfit = 0;
 }
+
+class UserProjectsInfoData {
+  int tasks = 0;
+  int tasksShare = 0;
+  int projects = 0;
+  int projectsShare = 0;
+  int users = 0;
+}

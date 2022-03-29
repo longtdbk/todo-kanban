@@ -26,11 +26,11 @@ class ProjectAddScreen extends StatelessWidget {
         title: const Text(
           'Thêm dự án',
         ),
-        leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                    builder: (BuildContext context) => const ProjectList()))),
+        // leading: IconButton(
+        //     icon: const Icon(Icons.arrow_back, color: Colors.black),
+        //     onPressed: () => Navigator.of(context).pushReplacement(
+        //         MaterialPageRoute(
+        //             builder: (BuildContext context) => const ProjectList()))),
         automaticallyImplyLeading: false,
         //title: Text('Login'),
       ),
@@ -148,59 +148,66 @@ class ProjectAddState extends State<ProjectAdd> with RestorationMixin {
     const sizedBoxSpace = SizedBox(height: 24);
     const sizedBoxWidth = SizedBox(width: 18);
 
-    return Form(
-      key: _formKey,
-      autovalidateMode: AutovalidateMode.values[_autoValidateModeIndex.value],
-      child: Scrollbar(
-        child: SingleChildScrollView(
-          restorationId: 'project_name_field_scroll_view',
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              sizedBoxSpace,
-              TextFormField(
-                restorationId: 'project_name_field',
-                textInputAction: TextInputAction.next,
-                focusNode: _name,
-                decoration: const InputDecoration(
-                  filled: true,
-                  icon: Icon(Icons.new_label),
-                  hintText: 'Tên dự án',
-                  labelText: 'Dự án',
-                ),
-                keyboardType: TextInputType.name,
-                onSaved: (value) {
-                  project.name = value!;
-                  //_password!.requestFocus();
-                },
-              ),
-              sizedBoxSpace,
-              !isLoading
-                  ? Center(
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                          ElevatedButton(
-                            onPressed: _handleSubmitted,
-                            child: const Text('Tạo'),
-                          ),
-                          sizedBoxWidth,
-                          ElevatedButton(
-                            onPressed: _routeToProjectList,
-                            child: const Text('Bỏ qua'),
-                          ),
-                        ]))
-                  : const Center(child: CircularProgressIndicator()),
-              sizedBoxSpace,
-              Text(
-                '* Là các trường bắt buộc',
-                style: Theme.of(context).textTheme.caption,
-              ),
-              sizedBoxSpace,
-            ],
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Thêm dự án',
           ),
         ),
-      ),
-    );
+        body: Form(
+          key: _formKey,
+          autovalidateMode:
+              AutovalidateMode.values[_autoValidateModeIndex.value],
+          child: Scrollbar(
+            child: SingleChildScrollView(
+              restorationId: 'project_name_field_scroll_view',
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  sizedBoxSpace,
+                  TextFormField(
+                    restorationId: 'project_name_field',
+                    textInputAction: TextInputAction.next,
+                    focusNode: _name,
+                    decoration: const InputDecoration(
+                      filled: true,
+                      icon: Icon(Icons.new_label),
+                      hintText: 'Tên dự án',
+                      labelText: 'Dự án',
+                    ),
+                    keyboardType: TextInputType.name,
+                    onSaved: (value) {
+                      project.name = value!;
+                      //_password!.requestFocus();
+                    },
+                  ),
+                  sizedBoxSpace,
+                  !isLoading
+                      ? Center(
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                              ElevatedButton(
+                                onPressed: _handleSubmitted,
+                                child: const Text('Tạo'),
+                              ),
+                              sizedBoxWidth,
+                              ElevatedButton(
+                                onPressed: _routeToProjectList,
+                                child: const Text('Bỏ qua'),
+                              ),
+                            ]))
+                      : const Center(child: CircularProgressIndicator()),
+                  sizedBoxSpace,
+                  Text(
+                    '* Là các trường bắt buộc',
+                    style: Theme.of(context).textTheme.caption,
+                  ),
+                  sizedBoxSpace,
+                ],
+              ),
+            ),
+          ),
+        ));
   }
 }
